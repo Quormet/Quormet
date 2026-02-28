@@ -1,0 +1,50 @@
+"use server";
+
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { users, announcements } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+async function getAuthUser() {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const [dbUser] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+    if (!dbUser || !dbUser.communityId) throw new Error("No community found");
+
+    return dbUser;
+}
+
+export async function createAnnouncement(formData: FormData) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can post announcements");
+
+    const title = formData.get("title") as string;
+    const body = formData.get("body") as string;
+
+    if (!title || !body) throw new Error("Title and body are required");
+
+    await db.insert(announcements).values({
+        communityId: user.communityId!,
+        authorId: user.id,
+        title,
+        body,
+    });
+
+    revalidatePath("/announcements");
+    redirect("/announcements");
+}
+
+export async function deleteAnnouncement(id: number) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can delete announcements");
+
+    await db.delete(announcements).where(and(
+        eq(announcements.id, id),
+        eq(announcements.communityId, user.communityId!)
+    ));
+
+    revalidatePath("/announcements");
+}

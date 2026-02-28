@@ -1,0 +1,71 @@
+"use server";
+
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { users, events, rsvps } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+async function getAuthUser() {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const [dbUser] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+    if (!dbUser || !dbUser.communityId) throw new Error("No community found");
+
+    return dbUser;
+}
+
+export async function createEvent(formData: FormData) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can create events");
+
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const location = formData.get("location") as string;
+    const startsAtStr = formData.get("startsAt") as string;
+
+    if (!name || !startsAtStr) throw new Error("Name and start time are required");
+
+    await db.insert(events).values({
+        communityId: user.communityId!,
+        name,
+        description,
+        location,
+        startsAt: new Date(startsAtStr),
+    });
+
+    revalidatePath("/events");
+    redirect("/events");
+}
+
+export async function submitRsvp(eventId: number, response: "yes" | "no") {
+    const user = await getAuthUser();
+
+    // Validate event exists and belongs to community
+    const [event] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+    if (!event || event.communityId !== user.communityId) {
+        throw new Error("Invalid event");
+    }
+
+    // Insert or update RSVP
+    const [existing] = await db.select()
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, eventId), eq(rsvps.userId, user.id)))
+        .limit(1);
+
+    if (existing) {
+        await db.update(rsvps)
+            .set({ response })
+            .where(eq(rsvps.id, existing.id));
+    } else {
+        await db.insert(rsvps).values({
+            eventId,
+            userId: user.id,
+            response,
+        });
+    }
+
+    revalidatePath("/events");
+}
