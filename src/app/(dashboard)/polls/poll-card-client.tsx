@@ -27,7 +27,7 @@ export default function PollCardClient({
     const [isVoting, setIsVoting] = useState<number | null>(null);
 
     const isClosed = poll.endsAt ? new Date(poll.endsAt) < new Date() : false;
-    const showResults = hasVoted || isAdmin || isClosed;
+    const showResults = hasVoted || isClosed;
     const optionsList = Array.isArray(poll.options) ? poll.options : [];
 
     async function handleVote(optionIndex: number) {

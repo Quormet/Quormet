@@ -11,14 +11,12 @@ import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink, BrainCircuit } f
 import { format } from "date-fns";
 import { createCheckoutSession, updateCommunityDues, markUserPaid } from "./actions";
 import { WolframAnalytics } from "./wolfram_analytics";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { getTerms } from "@/utils/communityTerms";
 
 export default async function DuesPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/sign-in");
+    const dbUser = await getCurrentUser();
 
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
 
     const [community] = await db.select().from(communities).where(eq(communities.id, dbUser.communityId)).limit(1);
@@ -163,7 +161,6 @@ export default async function DuesPage() {
                                 <div className="flex items-center gap-2">
                                     <BrainCircuit className="h-5 w-5 text-purple-600" />
                                     <CardTitle className="text-purple-900">Wolfram Finance Intelligence</CardTitle>
-                                    <span className="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">WOLFRAM AWARD</span>
                                 </div>
                                 <CardDescription className="text-purple-700">
                                     Leverage Wolfram Alpha's computational engine to analyze community financial health.

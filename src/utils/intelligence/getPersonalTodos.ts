@@ -77,7 +77,7 @@ export async function getPersonalTodos(userId: number, communityId: number): Pro
             type: 'unpaid_dues',
             title: 'Annual dues unpaid',
             description: 'Pay before the deadline to avoid late fees',
-            href: '/dues',
+            href: '/payments',
             urgency: 'high',
         })
     }

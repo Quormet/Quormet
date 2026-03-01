@@ -131,7 +131,7 @@ export async function generateNudges(communityId: number): Promise<Nudge[]> {
                 ? `1 member hasn't paid dues yet.`
                 : `${unpaid} of ${total} members haven't paid dues yet.`,
             actions: [
-                { label: 'View Unpaid', href: '/dues' },
+                { label: 'View Unpaid', href: '/payments' },
             ],
             data: { unpaid, total },
         })

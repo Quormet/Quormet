@@ -69,8 +69,8 @@ export async function createCheckoutSession() {
             userId: user.id.toString(),
             communityId: community.id.toString(),
         },
-        success_url: `${origin}/dues?success=true`,
-        cancel_url: `${origin}/dues?canceled=true`,
+        success_url: `${origin}/payments?success=true`,
+        cancel_url: `${origin}/payments?canceled=true`,
     });
 
     if (!session.url) {
@@ -96,7 +96,7 @@ export async function updateCommunityDues(formData: FormData) {
         .set({ duesAmount: amountCents, duesPeriod: period })
         .where(eq(communities.id, user.communityId!));
 
-    revalidatePath("/dues");
+    revalidatePath("/payments");
 }
 
 export async function markUserPaid(userIdToMark: number, isPaid: boolean) {
@@ -131,5 +131,5 @@ export async function markUserPaid(userIdToMark: number, isPaid: boolean) {
         });
     }
 
-    revalidatePath("/dues");
+    revalidatePath("/payments");
 }

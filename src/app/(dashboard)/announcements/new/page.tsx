@@ -17,8 +17,11 @@ export default function NewAnnouncementPage() {
         setIsLoading(true);
         try {
             await createAnnouncement(formData);
-            toast.success("Announcement posted successfully!");
         } catch (e: any) {
+            // Next.js redirect throws an error, we MUST re-throw it!
+            if (e.message === 'NEXT_REDIRECT') {
+                throw e;
+            }
             toast.error(e.message || "Failed to post announcement");
             setIsLoading(false);
         }

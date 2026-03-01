@@ -22,7 +22,6 @@ const allNavItems = [
     { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Issues", href: "/issues", icon: ClipboardList },
     { name: "Help Board", href: "/board", icon: HandHelping },
-    { name: "Explore Communities", href: "/communities", icon: Search },
 ];
 
 type Membership = {
@@ -199,6 +198,9 @@ export function SidebarNav({
                                     Sign Out
                                 </button>
                             </form>
+                            <div className="mt-4 px-2 text-[10px] text-slate-400 leading-tight">
+                                Proudly supporting UN SDG 11 & 16.
+                            </div>
                         </div>
                     </SheetContent>
                 </Sheet>
@@ -219,11 +221,14 @@ export function SidebarNav({
                 <div className="border-t flex flex-col p-4 shrink-0 bg-slate-50/50">
                     {renderUserMenu()}
                     <form action={signOut}>
-                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors px-2">
+                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors px-2 mt-2">
                             <LogOut className="h-3 w-3" />
                             Sign Out
                         </button>
                     </form>
+                    <div className="mt-4 px-2 text-[10px] text-slate-400 leading-tight">
+                        Proudly supporting UN SDG 11 & 16.
+                    </div>
                 </div>
             </aside>
         </>

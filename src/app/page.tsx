@@ -171,9 +171,14 @@ export default async function LandingPage() {
 
       <footer className="w-full py-8 bg-slate-900 text-slate-300 border-t border-slate-800">
         <div className="container mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Building className="h-6 w-6 text-blue-500" />
-            <span className="font-bold text-xl tracking-tight text-white">Quormet</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Building className="h-6 w-6 text-blue-500" />
+              <span className="font-bold text-xl tracking-tight text-white">Quormet</span>
+            </div>
+            <p className="text-xs text-slate-500 max-w-sm mt-2">
+              Proudly supporting the United Nations Sustainable Development Goals (SDG 11: Sustainable Cities and Communities & SDG 16: Peace, Justice and Strong Institutions).
+            </p>
           </div>
           <p className="text-sm">
             © {new Date().getFullYear()} Quormet Inc. All rights reserved.

@@ -127,7 +127,7 @@ export default async function DocumentsPage() {
                                 <div className="space-y-2">
                                     <label htmlFor="fileUrl" className="font-medium">File Link (URL)</label>
                                     <Input id="fileUrl" name="fileUrl" type="url" placeholder="https://..." required />
-                                    <p className="text-xs text-slate-500">For V1, paste a link to Google Drive, Dropbox, or any public file URL.</p>
+                                    <p className="text-xs text-slate-500">Paste a link to Google Drive, Dropbox, or any public file URL.</p>
                                 </div>
 
                                 <Button type="submit" className="w-full mt-2">

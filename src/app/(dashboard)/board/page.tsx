@@ -35,7 +35,7 @@ export default async function HelpBoardPage() {
         <div className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Neighbor Help Board</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Help Board</h1>
                     <p className="text-slate-500 mt-1">Lend a hand or ask for help from your community.</p>
                 </div>
                 <Button asChild>
