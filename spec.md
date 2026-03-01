@@ -1,738 +1,464 @@
-# Quormet — AI Community Assistant Spec
-> Using Google Cloud Generative AI (`@google/genai`) with Vertex AI
-> Model: `gemini-2.5-flash`
+# Quormet — Progress Tracker Spec
+> "The Pizza Tracker for HOA Issues"
+> Moves issue reporting from a black hole into a transparent, staged pipeline.
 
 ---
 
 ## Overview
 
-The assistant is a persistent chat panel on the dashboard. It has two modes:
+Any resident can submit an issue — a broken gate, burnt-out streetlight, noise complaint, parking violation. The board manages it through 5 stages. The resident can see exactly where their issue is at any time. No more "did anyone read my email?"
 
-- **Ask** — answers questions using the community's documents, bylaws, schedules, and data
-- **Act** — executes actions inside Quormet (create events, post announcements, create polls, etc.)
-
-It knows who you are, what community you're in, your role (admin vs member), and the full state of your community. Members and admins both use it but get different capabilities.
+This feature maps directly to **SDG 11** (safe, resilient communities) and **SDG 16** (accountable institutions).
 
 ---
 
-## UI Layout
-
-The assistant lives as a right-side panel on the dashboard (desktop) and a floating button that expands to full-screen on mobile.
+## The 5 Stages
 
 ```
-┌─────────────────────────┬──────────────────────────┐
-│                         │  🤖 Quormet Assistant     │
-│   Dashboard content     ├──────────────────────────┤
-│   (left 60%)            │                          │
-│                         │   Hi Samuel! I can help  │
-│                         │   you manage Maplewood   │
-│                         │   HOA. Ask me anything   │
-│                         │   or tell me what to do. │
-│                         │                          │
-│                         │   ┌──────────────────┐   │
-│                         │   │ Are pets allowed  │   │
-│                         │   │ in the pool?      │   │
-│                         │   └──────────────────┘   │
-│                         │                          │
-│                         │   According to Section   │
-│                         │   4.2 of your bylaws,    │
-│                         │   pets are not permitted │
-│                         │   in the pool area.      │
-│                         │                          │
-│                         │   ┌──────────────────┐   │
-│                         │   │ Schedule a pool   │   │
-│                         │   │ party March 15    │   │
-│                         │   └──────────────────┘   │
-│                         │                          │
-│                         │   Done! Event created:   │
-│                         │   ┌──────────────────┐   │
-│                         │   │ 📅 Pool Party     │   │
-│                         │   │ March 15 · 2:00PM │   │
-│                         │   │ [View] [Edit]     │   │
-│                         │   └──────────────────┘   │
-│                         │                          │
-├─────────────────────────┴──────────────────────────┤
-│                         │ [Ask anything...   ] [→] │
-└─────────────────────────┴──────────────────────────┘
+Submitted → Board Review → Vendor Assigned → In Progress → Resolved
 ```
 
-### Suggested prompts (shown when chat is empty)
+| Stage | Who sets it | What it means |
+|-------|-------------|---------------|
+| `submitted` | Auto (on creation) | Issue received, not yet reviewed |
+| `board_review` | Admin | Board has seen it, deciding what to do |
+| `vendor_assigned` | Admin | A contractor or vendor has been assigned |
+| `in_progress` | Admin | Work has started |
+| `resolved` | Admin | Issue is fixed |
+
+---
+
+## UI — What It Looks Like
+
+### Issue List Page (`/issues`)
+
+**Member view** — their own issues only:
 ```
-[📋 What are the quiet hours?]
-[📅 Schedule an event]
-[🗳️ Create a poll]
-[💰 Who hasn't paid dues?]
+┌─────────────────────────────────────────────────────┐
+│  My Issues                          [+ Report Issue] │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  🔴 Broken gate latch — Building A entrance        │
+│  Submitted Jan 15 · ●●○○○ Board Review             │
+│                                                     │
+│  🟡 Parking lot light out — Spot 24                │
+│  Submitted Jan 8  · ●●●●○ In Progress              │
+│                                                     │
+│  🟢 Graffiti on east wall                          │
+│  Submitted Dec 20 · ●●●●● Resolved ★★★★☆          │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Admin view** — all community issues with filters:
+```
+┌─────────────────────────────────────────────────────┐
+│  All Issues (12)        [Filter ▾]  [+ New Issue]  │
+├──────────┬──────────┬──────────┬──────────┬─────────┤
+│Submitted │  Board   │ Vendor   │   In     │Resolved │
+│    3     │  Review  │Assigned  │ Progress │    4    │
+│          │    2     │    1     │    2     │         │
+├─────────────────────────────────────────────────────┤
+│  🔴 Broken gate latch          Sarah J.  Jan 15    │
+│     ●●○○○ Board Review         [Update Status ▾]   │
+│                                                     │
+│  🔴 Pool pump noise            Mike C.   Jan 14    │
+│     ●○○○○ Submitted            [Update Status ▾]   │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## What the Assistant Can Do
+### Issue Detail Page (`/issues/[id]`)
 
-### For All Members
+This is the pizza tracker moment. Full page showing the issue and its live progress.
 
-| User says | Assistant does |
-|-----------|---------------|
-| "What are the quiet hours?" | Searches documents, returns answer with source |
-| "Can I install a fence?" | Answers from bylaws |
-| "When is the next meeting?" | Queries events table, returns date |
-| "What polls are open?" | Lists active polls |
-| "What events are coming up?" | Lists upcoming events |
-| "Have I paid my dues?" | Returns their payment status |
-
-### For Admins Only
-
-| User says | Assistant does |
-|-----------|---------------|
-| "Post an announcement about the water shutoff tomorrow" | Creates announcement, confirms |
-| "Create a poll: should we repaint the clubhouse? yes/no/maybe" | Creates poll, confirms |
-| "Schedule a block party March 15 at 2pm at community park" | Creates event, confirms |
-| "Who hasn't paid dues?" | Returns list of unpaid members |
-| "Who hasn't voted on the clubhouse poll?" | Returns list of non-voters |
-| "Close the clubhouse poll" | Closes poll, confirms |
-| "Summarize these meeting notes: [paste]" | Returns structured summary + action items |
+```
+┌──────────────────────────────────────────────────────┐
+│  ← Back to Issues                                    │
+│                                                      │
+│  Broken gate latch — Building A entrance             │
+│  Reported by Sarah Johnson · January 15, 2026        │
+│  Category: Maintenance                               │
+│                                                      │
+│  ────────────────── PROGRESS ──────────────────────  │
+│                                                      │
+│  ●────────●────────○────────○────────○              │
+│  Submitted  Board             Vendor   In      Resolved
+│  Jan 15     Review            Assigned Progress      │
+│             Jan 16                                   │
+│                                                      │
+│  ──────────────── DESCRIPTION ─────────────────────  │
+│                                                      │
+│  The latch on the main entrance gate to Building A   │
+│  is broken. The gate swings open freely and does     │
+│  not lock. This is a security concern.               │
+│                                                      │
+│  📷 [photo attached]                                 │
+│                                                      │
+│  ─────────────────── UPDATES ──────────────────────  │
+│                                                      │
+│  Jan 16 — Board Review                              │
+│  "We've reviewed this and are getting quotes from   │
+│   two vendors."                                      │
+│                                                      │
+│  Jan 15 — Submitted                                  │
+│  Issue received.                                     │
+│                                                      │
+│  ─────────── ADMIN CONTROLS (admin only) ──────────  │
+│                                                      │
+│  Status:    [Board Review          ▾]                │
+│  Assigned:  [Select vendor...      ▾]                │
+│  Note:      [Add an update note...   ]               │
+│             [Save Update]                            │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Install
+### Submit Issue Form (Modal)
 
+Triggered by "Report Issue" button. Available to all members.
+
+```
+Report an Issue
+───────────────────────────────────
+Title           [Short description of the issue  ]
+
+Category        [Maintenance         ▾]
+                Options: Maintenance / Safety /
+                         Noise / Parking / Other
+
+Location        [Where is this? Building, unit,  ]
+                [area of the community            ]
+
+Description     [                                ]
+                [Describe the issue in detail... ]
+                [                                ]
+
+Photo           [📎 Attach a photo (optional)   ]
+                Accepted: JPG, PNG — max 5MB
+
+                [Cancel]    [Submit Issue →]
+```
+
+---
+
+## Vendor Scorecard
+
+When an issue moves to `resolved`, the reporting resident sees a rating prompt.
+
+**On the issue detail page (resolved state):**
+```
+┌──────────────────────────────────────────────────────┐
+│  ✅ This issue has been resolved.                    │
+│                                                      │
+│  How was the work done by [vendor name]?             │
+│                                                      │
+│  ☆ ☆ ☆ ☆ ☆   (tap to rate)                         │
+│                                                      │
+│  Leave a comment (optional):                         │
+│  [                                              ]    │
+│                                                      │
+│  [Submit Rating]                                     │
+└──────────────────────────────────────────────────────┘
+```
+
+**Vendor Directory (admin only) — `/settings/vendors`:**
+```
+┌──────────────────────────────────────────────────────┐
+│  Vendor Directory                    [+ Add Vendor]  │
+├──────────────────────────────────────────────────────┤
+│  ABC Gate Repair                                     │
+│  ★★★★☆  4.2 avg · 5 jobs completed                  │
+│  Last used: Jan 16, 2026                             │
+│  Categories: Maintenance, Security                   │
+│                                                      │
+│  Bob's Electric                                      │
+│  ★★★★★  4.8 avg · 12 jobs completed                 │
+│  Last used: Dec 10, 2025                             │
+│  Categories: Electrical                              │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## Database Schema
+
+Add these tables to `src/db/schema.ts`:
+
+```ts
+// Issues table
+export const issues = pgTable('issues', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  communityId: uuid('community_id').references(() => communities.id).notNull(),
+  reportedBy: uuid('reported_by').references(() => users.id).notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  category: text('category').notNull(), // maintenance | safety | noise | parking | other
+  location: text('location').notNull(),
+  photoUrl: text('photo_url'),
+  status: text('status').notNull().default('submitted'),
+  // submitted | board_review | vendor_assigned | in_progress | resolved
+  assignedVendorId: uuid('assigned_vendor_id').references(() => vendors.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// Issue updates / activity log
+export const issueUpdates = pgTable('issue_updates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  issueId: uuid('issue_id').references(() => issues.id).notNull(),
+  updatedBy: uuid('updated_by').references(() => users.id).notNull(),
+  previousStatus: text('previous_status'),
+  newStatus: text('new_status').notNull(),
+  note: text('note'), // optional admin note with each status change
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Vendors table
+export const vendors = pgTable('vendors', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  communityId: uuid('community_id').references(() => communities.id).notNull(),
+  name: text('name').notNull(),
+  categories: text('categories').array(), // ['maintenance', 'electrical', etc]
+  phone: text('phone'),
+  email: text('email'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Vendor ratings
+export const vendorRatings = pgTable('vendor_ratings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => vendors.id).notNull(),
+  issueId: uuid('issue_id').references(() => issues.id).notNull(),
+  ratedBy: uuid('rated_by').references(() => users.id).notNull(),
+  rating: integer('rating').notNull(), // 1-5
+  comment: text('comment'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+```
+
+After adding these, run:
 ```bash
-npm install @google/genai
-```
-
-Add to `.env.local`:
-```
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
-GOOGLE_GENAI_USE_VERTEXAI=true
-# For local dev — path to your service account JSON key
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-```
-
-**Vertex AI setup:**
-1. Go to Google Cloud Console → enable the **Vertex AI API**
-2. Create a service account with the `Vertex AI User` role
-3. Download the JSON key and set `GOOGLE_APPLICATION_CREDENTIALS`
-4. On Vercel, paste the entire JSON key contents as an env var `GOOGLE_SERVICE_ACCOUNT_JSON` and load it in code (see API route below)
-
----
-
-## File Structure
-
-```
-src/
-  app/
-    (dashboard)/
-      dashboard/
-        page.tsx                  ← add AssistantPanel here
-    api/
-      assistant/
-        route.ts                  ← main API route
-  components/
-    assistant/
-      AssistantPanel.tsx          ← outer panel layout
-      AssistantChat.tsx           ← message list + input (client component)
-      AssistantMessage.tsx        ← individual message bubble
-      AssistantActionCard.tsx     ← rendered action result card
-      SuggestedPrompts.tsx        ← empty state chips
-  utils/
-    assistant/
-      gemini.ts                   ← Gemini client singleton
-      tools.ts                    ← tool declarations
-      executeTools.ts             ← maps tool calls to DB actions
-      systemPrompt.ts             ← builds system prompt with community context
+npx drizzle-kit push
 ```
 
 ---
 
-## Gemini Client
+## Server Actions
 
-`src/utils/assistant/gemini.ts`
+`src/app/(dashboard)/issues/actions.ts`
 
 ```ts
-import { GoogleGenAI } from '@google/genai'
-
-// For Vercel: load credentials from env var containing the full JSON key
-function getClient() {
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
-    return new GoogleGenAI({
-      vertexai: true,
-      project: process.env.GOOGLE_CLOUD_PROJECT!,
-      location: process.env.GOOGLE_CLOUD_LOCATION ?? 'us-central1',
-      googleAuthOptions: { credentials },
-    })
-  }
-
-  // Local dev — uses GOOGLE_APPLICATION_CREDENTIALS file path automatically
-  return new GoogleGenAI({
-    vertexai: true,
-    project: process.env.GOOGLE_CLOUD_PROJECT!,
-    location: process.env.GOOGLE_CLOUD_LOCATION ?? 'us-central1',
-  })
-}
-
-export const ai = getClient()
-export const MODEL = 'gemini-2.5-flash'
-```
-
----
-
-## Tool Declarations
-
-`src/utils/assistant/tools.ts`
-
-Gemini uses `functionDeclarations` inside a `Tool` object. The schema format is OpenAPI-compatible JSON Schema.
-
-```ts
-import { FunctionDeclaration } from '@google/genai'
-
-const memberFunctions: FunctionDeclaration[] = [
-  {
-    name: 'search_documents',
-    description: 'Search community documents, bylaws, and rules to answer a question',
-    parameters: {
-      type: 'object',
-      properties: {
-        query: {
-          type: 'string',
-          description: 'The question or topic to search for',
-        },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'get_events',
-    description: 'Get a list of upcoming community events',
-    parameters: { type: 'object', properties: {} },
-  },
-  {
-    name: 'get_polls',
-    description: 'Get a list of active community polls',
-    parameters: { type: 'object', properties: {} },
-  },
-  {
-    name: 'get_my_dues_status',
-    description: "Check the current user's dues payment status",
-    parameters: { type: 'object', properties: {} },
-  },
-]
-
-const adminFunctions: FunctionDeclaration[] = [
-  {
-    name: 'create_announcement',
-    description: 'Post a new announcement to the community',
-    parameters: {
-      type: 'object',
-      properties: {
-        title: { type: 'string', description: 'Short title for the announcement' },
-        body: { type: 'string', description: 'Full announcement text' },
-      },
-      required: ['title', 'body'],
-    },
-  },
-  {
-    name: 'create_poll',
-    description: 'Create a new community poll for members to vote on',
-    parameters: {
-      type: 'object',
-      properties: {
-        question: { type: 'string', description: 'The poll question' },
-        options: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'List of 2-4 answer options',
-        },
-        endsAt: {
-          type: 'string',
-          description: 'Optional ISO date string for when the poll closes',
-        },
-      },
-      required: ['question', 'options'],
-    },
-  },
-  {
-    name: 'create_event',
-    description: 'Schedule a new community event',
-    parameters: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', description: 'Event name' },
-        description: { type: 'string', description: 'Event description' },
-        location: { type: 'string', description: 'Where the event will be held' },
-        startsAt: {
-          type: 'string',
-          description: 'ISO date string for event start time',
-        },
-      },
-      required: ['name', 'startsAt'],
-    },
-  },
-  {
-    name: 'get_unpaid_members',
-    description: 'Get a list of members who have not paid dues',
-    parameters: { type: 'object', properties: {} },
-  },
-  {
-    name: 'get_non_voters',
-    description: 'Get members who have not voted on a specific poll',
-    parameters: {
-      type: 'object',
-      properties: {
-        pollId: { type: 'string', description: 'The poll ID to check' },
-      },
-      required: ['pollId'],
-    },
-  },
-  {
-    name: 'summarize_meeting_notes',
-    description: 'Summarize raw meeting notes into structured minutes with action items',
-    parameters: {
-      type: 'object',
-      properties: {
-        notes: { type: 'string', description: 'The raw meeting notes to summarize' },
-      },
-      required: ['notes'],
-    },
-  },
-]
-
-export function getTools(role: 'admin' | 'member') {
-  const functions = role === 'admin'
-    ? [...memberFunctions, ...adminFunctions]
-    : memberFunctions
-
-  return [{ functionDeclarations: functions }]
-}
-```
-
----
-
-## System Prompt
-
-`src/utils/assistant/systemPrompt.ts`
-
-```ts
-import { format } from 'date-fns'
-import { getCurrentUser } from '@/utils/getCurrentUser'
+'use server'
 import { db } from '@/db'
-import { communities, events, polls, documents, users, payments } from '@/db/schema'
-import { eq } from 'drizzle-orm'
-
-export async function buildSystemPrompt(user: Awaited<ReturnType<typeof getCurrentUser>>) {
-  const [community, upcomingEvents, activePolls, docs, allMembers, paidMembers] =
-    await Promise.all([
-      db.query.communities.findFirst({ where: eq(communities.id, user!.communityId!) }),
-      db.select().from(events).where(eq(events.communityId, user!.communityId!)),
-      db.select().from(polls).where(eq(polls.communityId, user!.communityId!)),
-      db.select().from(documents).where(eq(documents.communityId, user!.communityId!)),
-      db.select().from(users).where(eq(users.communityId, user!.communityId!)),
-      db.select().from(payments).where(eq(payments.communityId, user!.communityId!)),
-    ])
-
-  const memberCount = allMembers.length
-  const paidCount = new Set(paidMembers.map(p => p.userId)).size
-
-  return `
-You are the AI assistant for ${community?.name}, a community management platform called Quormet.
-Today is ${format(new Date(), 'MMMM d, yyyy')}.
-
-## Who You're Talking To
-Name: ${user!.name}
-Role: ${user!.role} (${user!.role === 'admin' ? 'board member with full access' : 'resident'})
-Community: ${community?.name}
-
-## Current Community State
-Members: ${memberCount} total residents
-Dues: ${paidCount} of ${memberCount} paid for the current period
-Join code: ${community?.joinCode}
-
-## Active Polls (${activePolls.length})
-${activePolls.map(p => `- "${p.question}"`).join('\n') || 'None'}
-
-## Upcoming Events (${upcomingEvents.length})
-${upcomingEvents.map(e => `- ${e.name} on ${format(new Date(e.startsAt), 'MMM d')} at ${format(new Date(e.startsAt), 'h:mm a')} ${e.location ? `at ${e.location}` : ''}`).join('\n') || 'None scheduled'}
-
-## Community Documents
-${docs.map(d => `- ${d.name} (${d.category})`).join('\n') || 'No documents uploaded yet'}
-
-## Your Capabilities
-${user!.role === 'admin' ? `
-As an admin assistant you can:
-- Answer questions about community rules, schedules, and data
-- Create announcements, polls, and events on behalf of the admin
-- Look up payment status for any member
-- Summarize meeting notes and extract action items
-` : `
-As a member assistant you can:
-- Answer questions about community rules, bylaws, and schedules
-- Tell the member about upcoming events and active polls
-- Check the member's own dues status
-You CANNOT create content or take admin actions.
-`}
-
-## Tone
-- Be concise — this is a chat interface, not an essay
-- When you take an action, confirm clearly what you did
-- When answering from documents, cite the source
-- If you don't know something, say so — never make up rules or policies
-`
-}
-```
-
----
-
-## API Route
-
-`src/app/api/assistant/route.ts`
-
-This is the agentic loop. Gemini returns a `functionCall`, your code executes it, you pass the result back as a `functionResponse`, and Gemini generates the final reply.
-
-```ts
-import { NextResponse } from 'next/server'
-import { ai, MODEL } from '@/utils/assistant/gemini'
-import { getTools } from '@/utils/assistant/tools'
-import { executeTool } from '@/utils/assistant/executeTools'
-import { buildSystemPrompt } from '@/utils/assistant/systemPrompt'
-import { getCurrentUser } from '@/utils/getCurrentUser'
-
-export async function POST(request: Request) {
-  const user = await getCurrentUser()
-  if (!user) return new Response('Unauthorized', { status: 401 })
-  if (!user.communityId) return new Response('No community', { status: 400 })
-
-  const { messages } = await request.json()
-
-  const systemPrompt = await buildSystemPrompt(user)
-  const tools = getTools(user.role as 'admin' | 'member')
-
-  // Convert frontend message history to Gemini content format
-  // Gemini uses 'model' instead of 'assistant' for role
-  const contents = messages.map((m: { role: string; content: string }) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }))
-
-  let toolResult: { type: string; data: any } | null = null
-
-  // Agentic loop — keeps going until Gemini stops calling functions
-  while (true) {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents,
-      config: {
-        systemInstruction: systemPrompt,
-        tools,
-        maxOutputTokens: 1024,
-        temperature: 0.3,
-      },
-    })
-
-    const candidate = response.candidates?.[0]
-    if (!candidate) break
-
-    const parts = candidate.content?.parts ?? []
-    const functionCallPart = parts.find(p => p.functionCall)
-
-    // No function call — Gemini is done, return final text response
-    if (!functionCallPart?.functionCall) {
-      const text = parts.map(p => p.text ?? '').join('')
-      return NextResponse.json({ message: text, toolResult })
-    }
-
-    // Execute the function call
-    const { name, args } = functionCallPart.functionCall
-    const result = await executeTool(name!, args as Record<string, any>, user)
-    toolResult = result
-
-    // Add the function call + response to the conversation and loop
-    contents.push({
-      role: 'model',
-      parts: [{ functionCall: { name, args } }],
-    })
-    contents.push({
-      role: 'user',
-      parts: [{
-        functionResponse: {
-          name: name!,
-          response: { output: JSON.stringify(result.data) },
-        },
-      }],
-    })
-  }
-
-  return NextResponse.json({ message: 'Something went wrong.', toolResult: null })
-}
-```
-
----
-
-## Tool Execution
-
-`src/utils/assistant/executeTools.ts`
-
-```ts
-import { db } from '@/db'
-import { announcements, polls, events, users, documents, payments } from '@/db/schema'
+import { issues, issueUpdates, vendorRatings } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { getCurrentUser } from '@/utils/getCurrentUser'
+import { revalidatePath } from 'next/cache'
 
-type User = Awaited<ReturnType<typeof getCurrentUser>>
+// Submit a new issue (any member)
+export async function submitIssue(formData: FormData) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthorized')
 
-export async function executeTool(
-  toolName: string,
-  input: Record<string, any>,
-  user: User
-): Promise<{ success: boolean; type: string; data: any }> {
+  const [created] = await db.insert(issues).values({
+    communityId: user.communityId!,
+    reportedBy: user.id,
+    title: formData.get('title') as string,
+    description: formData.get('description') as string,
+    category: formData.get('category') as string,
+    location: formData.get('location') as string,
+    photoUrl: formData.get('photoUrl') as string | null,
+    status: 'submitted',
+  }).returning()
 
-  switch (toolName) {
+  // Log the initial status
+  await db.insert(issueUpdates).values({
+    issueId: created.id,
+    updatedBy: user.id,
+    previousStatus: null,
+    newStatus: 'submitted',
+    note: 'Issue received.',
+  })
 
-    case 'search_documents': {
-      const docs = await db.select().from(documents)
-        .where(eq(documents.communityId, user!.communityId!))
-      const query = (input.query as string).toLowerCase()
-      const relevant = docs.filter(d =>
-        d.name.toLowerCase().includes(query) ||
-        (d.description ?? '').toLowerCase().includes(query)
-      )
-      return { success: true, type: 'documents', data: relevant }
-    }
+  revalidatePath('/issues')
+  return created
+}
 
-    case 'get_events': {
-      const upcoming = await db.select().from(events)
-        .where(eq(events.communityId, user!.communityId!))
-      return { success: true, type: 'event_list', data: upcoming }
-    }
+// Update issue status (admin only)
+export async function updateIssueStatus(
+  issueId: string,
+  newStatus: string,
+  note?: string,
+  vendorId?: string
+) {
+  const user = await getCurrentUser()
+  if (!user || user.role !== 'admin') throw new Error('Forbidden')
 
-    case 'get_polls': {
-      const active = await db.select().from(polls)
-        .where(eq(polls.communityId, user!.communityId!))
-      return { success: true, type: 'poll_list', data: active }
-    }
+  const [current] = await db.select().from(issues).where(eq(issues.id, issueId))
+  if (!current) throw new Error('Issue not found')
 
-    case 'get_my_dues_status': {
-      const userPayments = await db.select().from(payments)
-        .where(and(
-          eq(payments.userId, user!.id),
-          eq(payments.communityId, user!.communityId!)
-        ))
-      return {
-        success: true,
-        type: 'dues_status',
-        data: { paid: userPayments.length > 0, payments: userPayments }
-      }
-    }
+  await db.update(issues)
+    .set({
+      status: newStatus,
+      assignedVendorId: vendorId ?? current.assignedVendorId,
+      updatedAt: new Date(),
+    })
+    .where(eq(issues.id, issueId))
 
-    case 'create_announcement': {
-      const [created] = await db.insert(announcements).values({
-        communityId: user!.communityId!,
-        authorId: user!.id,
-        title: input.title,
-        body: input.body,
-      }).returning()
-      return { success: true, type: 'announcement', data: created }
-    }
+  await db.insert(issueUpdates).values({
+    issueId,
+    updatedBy: user.id,
+    previousStatus: current.status,
+    newStatus,
+    note: note ?? null,
+  })
 
-    case 'create_poll': {
-      const [created] = await db.insert(polls).values({
-        communityId: user!.communityId!,
-        authorId: user!.id,
-        question: input.question,
-        options: input.options,
-        endsAt: input.endsAt ? new Date(input.endsAt) : null,
-      }).returning()
-      return { success: true, type: 'poll', data: created }
-    }
+  revalidatePath(`/issues/${issueId}`)
+  revalidatePath('/issues')
+}
 
-    case 'create_event': {
-      const [created] = await db.insert(events).values({
-        communityId: user!.communityId!,
-        name: input.name,
-        description: input.description ?? '',
-        location: input.location ?? '',
-        startsAt: new Date(input.startsAt),
-      }).returning()
-      return { success: true, type: 'event', data: created }
-    }
+// Get all issues (admin) or own issues (member)
+export async function getIssues() {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthorized')
 
-    case 'get_unpaid_members': {
-      const allMembers = await db.select().from(users)
-        .where(eq(users.communityId, user!.communityId!))
-      const paidIds = new Set(
-        (await db.select().from(payments)
-          .where(eq(payments.communityId, user!.communityId!)))
-          .map(p => p.userId)
-      )
-      const unpaid = allMembers.filter(m => !paidIds.has(m.id))
-      return { success: true, type: 'member_list', data: unpaid }
-    }
-
-    case 'get_non_voters': {
-      const allMembers = await db.select().from(users)
-        .where(eq(users.communityId, user!.communityId!))
-      // Import votes table from your schema
-      // const votedIds = new Set(votes where pollId = input.pollId)
-      // const nonVoters = allMembers.filter(m => !votedIds.has(m.id))
-      return { success: true, type: 'member_list', data: allMembers }
-    }
-
-    case 'summarize_meeting_notes': {
-      // For this tool, just pass the notes back in the response
-      // Gemini will summarize them in its final reply — no DB action needed
-      return {
-        success: true,
-        type: 'meeting_notes',
-        data: { notes: input.notes, instruction: 'Summarize these notes into structured minutes with action items and suggested polls.' }
-      }
-    }
-
-    default:
-      return { success: false, type: 'error', data: { message: `Unknown tool: ${toolName}` } }
+  if (user.role === 'admin') {
+    return db.select().from(issues)
+      .where(eq(issues.communityId, user.communityId!))
+      .orderBy(issues.createdAt)
   }
+
+  return db.select().from(issues)
+    .where(and(
+      eq(issues.communityId, user.communityId!),
+      eq(issues.reportedBy, user.id)
+    ))
+    .orderBy(issues.createdAt)
+}
+
+// Get single issue with updates
+export async function getIssue(id: string) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [issue] = await db.select().from(issues).where(eq(issues.id, id))
+  const updates = await db.select().from(issueUpdates)
+    .where(eq(issueUpdates.issueId, id))
+    .orderBy(issueUpdates.createdAt)
+
+  return { issue, updates }
+}
+
+// Submit vendor rating (member, resolved issues only)
+export async function submitVendorRating(
+  issueId: string,
+  vendorId: string,
+  rating: number,
+  comment?: string
+) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Unauthorized')
+
+  await db.insert(vendorRatings).values({
+    vendorId,
+    issueId,
+    ratedBy: user.id,
+    rating,
+    comment: comment ?? null,
+  })
+
+  revalidatePath(`/issues/${issueId}`)
 }
 ```
 
 ---
 
-## Chat UI Component
+## The Progress Stepper Component
 
-`src/components/assistant/AssistantChat.tsx`
+`src/components/issues/ProgressStepper.tsx`
 
 ```tsx
-'use client'
-import { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Send, Loader2, Bot } from 'lucide-react'
-import AssistantMessage from './AssistantMessage'
-import AssistantActionCard from './AssistantActionCard'
-import SuggestedPrompts from './SuggestedPrompts'
+import { Check } from 'lucide-react'
+import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
 
-type Message = {
-  role: 'user' | 'assistant'
-  content: string
-  toolResult?: { type: string; data: any }
-}
-
-const SUGGESTED_PROMPTS = [
-  'What are the quiet hours?',
-  'Schedule a community event',
-  'Create a poll for neighbors',
-  "Who hasn't paid dues?",
+const STAGES = [
+  { key: 'submitted',        label: 'Submitted' },
+  { key: 'board_review',     label: 'Board Review' },
+  { key: 'vendor_assigned',  label: 'Vendor Assigned' },
+  { key: 'in_progress',      label: 'In Progress' },
+  { key: 'resolved',         label: 'Resolved' },
 ]
 
-export default function AssistantChat({ userRole }: { userRole: 'admin' | 'member' }) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
+type Update = {
+  newStatus: string
+  createdAt: Date
+}
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+export default function ProgressStepper({
+  currentStatus,
+  updates,
+}: {
+  currentStatus: string
+  updates: Update[]
+}) {
+  const currentIndex = STAGES.findIndex(s => s.key === currentStatus)
 
-  async function sendMessage(text: string) {
-    if (!text.trim() || loading) return
-
-    const userMessage: Message = { role: 'user', content: text }
-    const newMessages = [...messages, userMessage]
-    setMessages(newMessages)
-    setInput('')
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages.map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      })
-
-      const data = await res.json()
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.message,
-        toolResult: data.toolResult,
-      }])
-    } catch {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Something went wrong. Please try again.',
-      }])
-    } finally {
-      setLoading(false)
-    }
-  }
+  const getDateForStage = (stageKey: string) =>
+    updates.find(u => u.newStatus === stageKey)?.createdAt
 
   return (
-    <div className="flex flex-col h-full border rounded-xl overflow-hidden bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b bg-muted/30">
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <Bot className="w-4 h-4 text-primary-foreground" />
-        </div>
-        <div>
-          <p className="font-semibold text-sm">Quormet Assistant</p>
-          <p className="text-xs text-muted-foreground">Ask anything about your community</p>
-        </div>
-      </div>
+    <div className="w-full py-6">
+      <div className="flex items-center justify-between relative">
+        {/* Connecting line */}
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted" />
+        <div
+          className="absolute top-5 left-0 h-0.5 bg-primary transition-all duration-500"
+          style={{ width: `${(currentIndex / (STAGES.length - 1)) * 100}%` }}
+        />
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
-        {messages.length === 0 ? (
-          <SuggestedPrompts
-            prompts={userRole === 'admin' ? SUGGESTED_PROMPTS : SUGGESTED_PROMPTS.slice(0, 2)}
-            onSelect={sendMessage}
-          />
-        ) : (
-          <div className="space-y-4">
-            {messages.map((msg, i) => (
-              <div key={i}>
-                <AssistantMessage message={msg} />
-                {msg.toolResult && (
-                  <AssistantActionCard
-                    type={msg.toolResult.type}
-                    data={msg.toolResult.data}
-                  />
+        {STAGES.map((stage, index) => {
+          const isCompleted = index < currentIndex
+          const isCurrent = index === currentIndex
+          const isPending = index > currentIndex
+          const date = getDateForStage(stage.key)
+
+          return (
+            <div key={stage.key} className="flex flex-col items-center gap-2 z-10">
+              {/* Circle */}
+              <div className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300',
+                isCompleted && 'bg-primary border-primary text-primary-foreground',
+                isCurrent && 'bg-background border-primary text-primary ring-4 ring-primary/20',
+                isPending && 'bg-background border-muted text-muted-foreground'
+              )}>
+                {isCompleted
+                  ? <Check className="w-4 h-4" />
+                  : <span className="text-xs font-bold">{index + 1}</span>
+                }
+              </div>
+
+              {/* Label */}
+              <div className="text-center">
+                <p className={cn(
+                  'text-xs font-medium',
+                  (isCompleted || isCurrent) ? 'text-foreground' : 'text-muted-foreground'
+                )}>
+                  {stage.label}
+                </p>
+                {date && (
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(date), 'MMM d')}
+                  </p>
                 )}
               </div>
-            ))}
-            {loading && (
-              <div className="flex gap-2 items-center text-muted-foreground text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Thinking...
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-        )}
-      </ScrollArea>
-
-      {/* Input */}
-      <div className="p-3 border-t flex gap-2">
-        <Input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage(input)}
-          placeholder="Ask anything or give a command..."
-          disabled={loading}
-          className="flex-1"
-        />
-        <Button
-          onClick={() => sendMessage(input)}
-          disabled={loading || !input.trim()}
-          size="icon"
-        >
-          {loading
-            ? <Loader2 className="w-4 h-4 animate-spin" />
-            : <Send className="w-4 h-4" />
-          }
-        </Button>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -741,95 +467,327 @@ export default function AssistantChat({ userRole }: { userRole: 'admin' | 'membe
 
 ---
 
-## Action Cards
+## Status Badge Component
 
-`src/components/assistant/AssistantActionCard.tsx`
-
-Renders a confirmation card when Gemini creates something — not just plain text.
+`src/components/issues/StatusBadge.tsx`
 
 ```tsx
-import { Calendar, Megaphone, BarChart2 } from 'lucide-react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { format } from 'date-fns'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
-export default function AssistantActionCard({ type, data }: { type: string; data: any }) {
-  if (type === 'announcement') return (
-    <Card className="p-3 mt-2 border-l-4 border-l-blue-500">
-      <div className="flex items-center gap-2 mb-1">
-        <Megaphone className="w-4 h-4 text-blue-500" />
-        <span className="text-xs font-medium text-blue-500">Announcement Posted</span>
-      </div>
-      <p className="font-semibold text-sm">{data.title}</p>
-      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{data.body}</p>
-      <Link href="/announcements">
-        <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">View →</Button>
-      </Link>
-    </Card>
+const STATUS_CONFIG = {
+  submitted:       { label: 'Submitted',       color: 'bg-slate-100 text-slate-700' },
+  board_review:    { label: 'Board Review',     color: 'bg-yellow-100 text-yellow-700' },
+  vendor_assigned: { label: 'Vendor Assigned',  color: 'bg-blue-100 text-blue-700' },
+  in_progress:     { label: 'In Progress',      color: 'bg-orange-100 text-orange-700' },
+  resolved:        { label: 'Resolved',         color: 'bg-green-100 text-green-700' },
+}
+
+export default function StatusBadge({ status }: { status: string }) {
+  const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]
+  if (!config) return null
+
+  return (
+    <Badge className={cn('font-medium border-0', config.color)}>
+      {config.label}
+    </Badge>
   )
-
-  if (type === 'event') return (
-    <Card className="p-3 mt-2 border-l-4 border-l-green-500">
-      <div className="flex items-center gap-2 mb-1">
-        <Calendar className="w-4 h-4 text-green-500" />
-        <span className="text-xs font-medium text-green-500">Event Created</span>
-      </div>
-      <p className="font-semibold text-sm">{data.name}</p>
-      <p className="text-xs text-muted-foreground">
-        {format(new Date(data.startsAt), 'MMM d · h:mm a')}
-        {data.location && ` · ${data.location}`}
-      </p>
-      <Link href="/events">
-        <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">View →</Button>
-      </Link>
-    </Card>
-  )
-
-  if (type === 'poll') return (
-    <Card className="p-3 mt-2 border-l-4 border-l-purple-500">
-      <div className="flex items-center gap-2 mb-1">
-        <BarChart2 className="w-4 h-4 text-purple-500" />
-        <span className="text-xs font-medium text-purple-500">Poll Created</span>
-      </div>
-      <p className="font-semibold text-sm">{data.question}</p>
-      <p className="text-xs text-muted-foreground">{data.options?.length} options</p>
-      <Link href="/polls">
-        <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">View →</Button>
-      </Link>
-    </Card>
-  )
-
-  return null
 }
 ```
 
 ---
 
-## Key Differences from Anthropic SDK
+## Admin Status Update UI
 
-If you've seen examples using `@anthropic-ai/sdk`, here's what changes with Gemini:
+The dropdown + note field shown on the issue detail page for admins.
 
-| Concept | Anthropic | Gemini (`@google/genai`) |
-|---------|-----------|--------------------------|
-| Role name | `assistant` | `model` |
-| Tool format | `tools: [{ name, description, input_schema }]` | `tools: [{ functionDeclarations: [...] }]` |
-| Tool call in response | `content[].type === 'tool_use'` | `parts[].functionCall` |
-| Tool result back to model | `{ role: 'user', content: [{ type: 'tool_result' }] }` | `{ role: 'user', parts: [{ functionResponse }] }` |
-| Stop reason | `stop_reason === 'tool_use'` | Check if any part has `functionCall` |
-| System prompt | `system: '...'` top-level param | `config.systemInstruction: '...'` |
-| Model name | `claude-sonnet-4-20250514` | `gemini-2.5-flash` |
+`src/components/issues/AdminStatusPanel.tsx`
+
+```tsx
+'use client'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { updateIssueStatus } from '@/app/(dashboard)/issues/actions'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
+
+const STATUSES = [
+  { value: 'submitted',        label: 'Submitted' },
+  { value: 'board_review',     label: 'Board Review' },
+  { value: 'vendor_assigned',  label: 'Vendor Assigned' },
+  { value: 'in_progress',      label: 'In Progress' },
+  { value: 'resolved',         label: 'Resolved' },
+]
+
+export default function AdminStatusPanel({
+  issueId,
+  currentStatus,
+}: {
+  issueId: string
+  currentStatus: string
+}) {
+  const [status, setStatus] = useState(currentStatus)
+  const [note, setNote] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
+
+  async function handleSave() {
+    setLoading(true)
+    try {
+      await updateIssueStatus(issueId, status, note)
+      setNote('')
+      toast({ title: 'Status updated', description: `Issue moved to ${status.replace('_', ' ')}` })
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+      <p className="text-sm font-semibold">Admin Controls</p>
+
+      <div className="space-y-2">
+        <label className="text-xs text-muted-foreground">Status</label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUSES.map(s => (
+              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs text-muted-foreground">Update Note (optional)</label>
+        <Textarea
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          placeholder="Add a note for the resident..."
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+
+      <Button onClick={handleSave} disabled={loading} className="w-full">
+        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+        Save Update
+      </Button>
+    </div>
+  )
+}
+```
+
+---
+
+## Vendor Star Rating Component
+
+`src/components/issues/StarRating.tsx`
+
+```tsx
+'use client'
+import { useState } from 'react'
+import { Star } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { submitVendorRating } from '@/app/(dashboard)/issues/actions'
+import { useToast } from '@/components/ui/use-toast'
+import { cn } from '@/lib/utils'
+
+export default function StarRating({
+  issueId,
+  vendorId,
+  vendorName,
+}: {
+  issueId: string
+  vendorId: string
+  vendorName: string
+}) {
+  const [hovered, setHovered] = useState(0)
+  const [selected, setSelected] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
+
+  async function handleSubmit() {
+    if (!selected) return
+    setLoading(true)
+    try {
+      await submitVendorRating(issueId, vendorId, selected, comment)
+      setSubmitted(true)
+      toast({ title: 'Rating submitted', description: 'Thank you for your feedback!' })
+    } catch {
+      toast({ title: 'Error', description: 'Failed to submit rating', variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (submitted) return (
+    <div className="border rounded-lg p-4 text-center text-sm text-muted-foreground">
+      ✅ Thanks for rating {vendorName}!
+    </div>
+  )
+
+  return (
+    <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
+      <p className="text-sm font-medium">How was the work by {vendorName}?</p>
+
+      {/* Stars */}
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map(star => (
+          <button
+            key={star}
+            onMouseEnter={() => setHovered(star)}
+            onMouseLeave={() => setHovered(0)}
+            onClick={() => setSelected(star)}
+          >
+            <Star className={cn(
+              'w-7 h-7 transition-colors',
+              star <= (hovered || selected)
+                ? 'fill-yellow-400 text-yellow-400'
+                : 'text-muted-foreground'
+            )} />
+          </button>
+        ))}
+      </div>
+
+      <Textarea
+        value={comment}
+        onChange={e => setComment(e.target.value)}
+        placeholder="Leave a comment (optional)..."
+        className="resize-none"
+        rows={2}
+      />
+
+      <Button
+        onClick={handleSubmit}
+        disabled={!selected || loading}
+        size="sm"
+        className="w-full"
+      >
+        Submit Rating
+      </Button>
+    </div>
+  )
+}
+```
+
+---
+
+## Navigation
+
+Add Issues to the sidebar nav in your layout:
+
+```tsx
+{ href: '/issues', icon: ClipboardList, label: 'Issues' }
+```
+
+Import `ClipboardList` from `lucide-react`.
+
+---
+
+## Seed Data
+
+Add to `src/db/seed.ts`:
+
+```ts
+// Vendors
+const [vendor1] = await db.insert(vendors).values({
+  communityId: community.id,
+  name: 'ABC Gate Repair',
+  categories: ['maintenance', 'security'],
+  phone: '(303) 555-0120',
+  email: 'contact@abcgate.com',
+}).returning()
+
+const [vendor2] = await db.insert(vendors).values({
+  communityId: community.id,
+  name: "Bob's Electric",
+  categories: ['electrical'],
+  phone: '(303) 555-0145',
+}).returning()
+
+// Issues — mix of statuses for a good demo
+const [issue1] = await db.insert(issues).values({
+  communityId: community.id,
+  reportedBy: memberUser.id,
+  title: 'Broken gate latch — Building A entrance',
+  description: 'The latch on the main entrance gate is broken. The gate swings open freely.',
+  category: 'maintenance',
+  location: 'Building A main entrance',
+  status: 'board_review',
+}).returning()
+
+const [issue2] = await db.insert(issues).values({
+  communityId: community.id,
+  reportedBy: memberUser2.id,
+  title: 'Parking lot light out — Spot 24',
+  description: 'The overhead light near spot 24 has been out for a week. Safety concern at night.',
+  category: 'safety',
+  location: 'Parking lot, spot 24',
+  status: 'in_progress',
+  assignedVendorId: vendor2.id,
+}).returning()
+
+const [issue3] = await db.insert(issues).values({
+  communityId: community.id,
+  reportedBy: memberUser.id,
+  title: 'Graffiti on east wall',
+  description: 'Graffiti appeared overnight on the east perimeter wall near the mailboxes.',
+  category: 'maintenance',
+  location: 'East perimeter wall',
+  status: 'resolved',
+  assignedVendorId: vendor1.id,
+}).returning()
+
+// Issue updates (activity log)
+await db.insert(issueUpdates).values([
+  { issueId: issue1.id, updatedBy: adminUser.id, previousStatus: null,
+    newStatus: 'submitted', note: 'Issue received.' },
+  { issueId: issue1.id, updatedBy: adminUser.id, previousStatus: 'submitted',
+    newStatus: 'board_review', note: 'Getting quotes from vendors.' },
+  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: null,
+    newStatus: 'submitted', note: 'Issue received.' },
+  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'submitted',
+    newStatus: 'board_review', note: null },
+  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'board_review',
+    newStatus: 'vendor_assigned', note: "Bob's Electric assigned." },
+  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'vendor_assigned',
+    newStatus: 'in_progress', note: 'Electrician on site today.' },
+  { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: null,
+    newStatus: 'submitted', note: 'Issue received.' },
+  { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: 'submitted',
+    newStatus: 'resolved', note: 'Wall cleaned and repainted.' },
+])
+```
 
 ---
 
 ## ✅ Done When
 
-- [ ] `npm install @google/genai` added and Vertex AI env vars configured
-- [ ] Chat panel renders on dashboard with suggested prompts
-- [ ] Member can ask "what are the quiet hours?" and get an answer
-- [ ] Admin can say "post an announcement about the water shutoff" and it appears in announcements
-- [ ] Admin can say "create a poll: should we get a security camera? yes/no" and poll is created
-- [ ] Admin can say "schedule a block party March 15 at 2pm" and event is created
-- [ ] Action cards render after successful tool calls with links to the created item
-- [ ] Member cannot trigger admin tools — enforced server-side by `getTools(user.role)`
-- [ ] Works on mobile as a full-screen overlay
+- [ ] `npx drizzle-kit push` runs without errors with new tables
+- [ ] Any member can submit an issue via the modal form
+- [ ] Issue list shows member's own issues (member) or all issues (admin)
+- [ ] Issue detail page shows the 5-stage progress stepper with correct current stage
+- [ ] Progress stepper fills in with dates from the issue updates log
+- [ ] Admin can change status via dropdown + optional note
+- [ ] Status change appears immediately in the updates timeline on the detail page
+- [ ] Resolved issues show the star rating prompt to the reporting resident
+- [ ] Star rating saves to DB and shows "Thanks for rating" on resubmit
+- [ ] Vendor directory page shows all vendors with average rating
+- [ ] Issues page is in the sidebar nav
+- [ ] Seed data creates 3 issues at different stages for demo

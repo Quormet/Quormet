@@ -7,10 +7,9 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { communities, users } from "@/db/schema";
-import { eq, ilike, sql } from "drizzle-orm";
+import { communities, users, communityMembers } from "@/db/schema";
+import { eq, ilike, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 
 function generateJoinCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -18,14 +17,14 @@ function generateJoinCode() {
 
 export async function createCommunity(formData: FormData) {
     const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
+    const { data: { user } } = await supabase.auth.getUser();
+
     if (!user) {
         throw new Error("Unauthorized");
     }
 
     const name = formData.get("name") as string;
-    const address = formData.get("address") as string; 
+    const address = formData.get("address") as string;
     if (!name || name.length < 3 || name.length > 50) throw new Error("Community name must be between 3 and 50 characters");
 
     const joinCode = generateJoinCode();
@@ -37,7 +36,8 @@ export async function createCommunity(formData: FormData) {
     const primaryEmail = user.email || "no-email@example.com";
     const fullName = (user.user_metadata?.full_name || user.user_metadata?.name || "Community Member") as string;
 
-    await db.insert(users).values({
+    // Upsert the user record
+    const [dbUser] = await db.insert(users).values({
         supabaseId: user.id,
         name: fullName,
         email: primaryEmail,
@@ -53,15 +53,21 @@ export async function createCommunity(formData: FormData) {
             email: primaryEmail,
             address: address,
         }
-    });
+    }).returning();
+
+    // Add to community_members junction table as admin
+    await db.insert(communityMembers).values({
+        userId: dbUser.id,
+        communityId: newCommunity.id,
+        role: "admin",
+    }).onConflictDoNothing();
 
     return { joinCode };
 }
 
 export async function joinCommunity(formData: FormData) {
-    const cookieStore = await cookies();
     const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
         throw new Error("Unauthorized");
@@ -76,7 +82,8 @@ export async function joinCommunity(formData: FormData) {
     const primaryEmail = user.email || "no-email@example.com";
     const fullName = (user.user_metadata?.full_name || user.user_metadata?.name || "Community Member") as string;
 
-    await db.insert(users).values({
+    // Upsert the user (without overwriting communityId if they're already in communities)
+    const [dbUser] = await db.insert(users).values({
         supabaseId: user.id,
         name: fullName,
         email: primaryEmail,
@@ -85,12 +92,19 @@ export async function joinCommunity(formData: FormData) {
     }).onConflictDoUpdate({
         target: users.supabaseId,
         set: {
-            communityId: community.id,
-            role: "member",
             name: fullName,
             email: primaryEmail,
+            // Update communityId to the joined community so legacy fallback works
+            communityId: community.id,
         }
-    });
+    }).returning();
+
+    // Add to community_members — if already a member, do nothing (don't downgrade role)
+    await db.insert(communityMembers).values({
+        userId: dbUser.id,
+        communityId: community.id,
+        role: "member",
+    }).onConflictDoNothing();
 
     redirect("/dashboard");
 }
@@ -120,7 +134,7 @@ export async function joinCommunityById(communityId: number) {
     const primaryEmail = user.email || "no-email@example.com";
     const fullName = (user.user_metadata?.full_name || user.user_metadata?.name || "Community Member") as string;
 
-    await db.insert(users).values({
+    const [dbUser] = await db.insert(users).values({
         supabaseId: user.id,
         name: fullName,
         email: primaryEmail,
@@ -129,12 +143,18 @@ export async function joinCommunityById(communityId: number) {
     }).onConflictDoUpdate({
         target: users.supabaseId,
         set: {
-            communityId: community.id,
-            role: "member",
             name: fullName,
             email: primaryEmail,
+            communityId: community.id,
         }
-    });
+    }).returning();
+
+    // Add to community_members if not already a member
+    await db.insert(communityMembers).values({
+        userId: dbUser.id,
+        communityId: community.id,
+        role: "member",
+    }).onConflictDoNothing();
 
     redirect("/dashboard");
 }
