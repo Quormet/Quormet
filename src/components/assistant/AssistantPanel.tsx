@@ -11,7 +11,7 @@ export default function AssistantPanel({ userRole }: { userRole: 'admin' | 'memb
     return (
         <>
             {/* Desktop Panel */}
-            <div className="hidden lg:flex flex-col w-[400px] shrink-0 border-l bg-card h-[calc(100vh-4rem)] sticky top-16">
+            <div className="hidden lg:flex flex-col w-[400px] shrink-0 border-l bg-card h-full">
                 <AssistantChat userRole={userRole} />
             </div>
 

@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/utils/getCurrentUser'
 import { db } from '@/db'
 import { users, announcements, polls, events, votes, rsvps, communities } from '@/db/schema'
 import { eq, desc, count, and, gte, isNull } from 'drizzle-orm'
+import { getCommunityHealth } from '@/utils/communityHealth'
 
 export async function getDashboardData() {
     const user = await getCurrentUser()
@@ -101,9 +102,12 @@ export async function getDashboardData() {
     const paidCount = paymentStatsData.find(p => p.paid)?.count || 0
     const unpaidCount = paymentStatsData.find(p => !p.paid)?.count || 0
 
+    const health = await getCommunityHealth(communityId)
+
     return {
         user,
         communityName: community?.name || 'Your Community',
+        communityType: community?.communityType || 'default',
         announcements: announcementsData,
         polls: activePolls.map(p => ({
             ...p,
@@ -117,6 +121,7 @@ export async function getDashboardData() {
             paidCount,
             totalCount: memberCount
         },
+        health,
         userVotes: userVotesData.map(v => v.pollId),
         userRsvps: userRsvpsData
     }

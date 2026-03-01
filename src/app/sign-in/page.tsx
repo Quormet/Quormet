@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, signInWithOAuth } from '../actions'
+import { signIn, signInWithOAuth, signInAsDemo } from '@/app/auth/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
@@ -139,7 +139,7 @@ export default function LoginPage() {
                     </Link>
                     <div className="text-sm text-center text-slate-500">
                         Don't have an account?{' '}
-                        <Link href="/auth/signup" className="text-blue-600 hover:underline font-medium">
+                        <Link href="/sign-up" className="text-blue-600 hover:underline font-medium">
                             Sign up
                         </Link>
                     </div>

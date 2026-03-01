@@ -11,7 +11,7 @@ import { MessageSquare } from "lucide-react";
 export default async function MessagesPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser) redirect("/onboarding");
@@ -31,9 +31,9 @@ export default async function MessagesPage() {
     }
 
     return (
-        <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
+        <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b bg-white">
+            <div className="flex items-center justify-between px-5 py-4 border-b bg-white shrink-0">
                 <h1 className="text-xl font-bold tracking-tight">Messages</h1>
                 <NewChatButton />
             </div>

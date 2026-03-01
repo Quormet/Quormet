@@ -10,7 +10,7 @@ import { format } from 'date-fns'
 
 export default async function VendorsPage() {
     const user = await getCurrentUser()
-    if (!user || user.role !== 'admin') redirect('/dashboard')
+    if (!user || user.role !== 'admin') redirect('/home')
 
     const vendorsList = await getVendors()
 

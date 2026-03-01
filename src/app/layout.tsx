@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Quormet - Community Management Simplified',
-  description: 'An all-in-one platform for neighborhood associations and community groups.',
+  description: 'An all-in-one platform for communities and groups.',
 };
 
 export default function RootLayout({

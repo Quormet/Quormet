@@ -69,7 +69,7 @@ export default function ExploreCommunitiesPage() {
             await joinCommunity(formData);
             toast.success("Joined successfully!");
             router.refresh(); // Refresh dashboard context
-            router.push('/dashboard');
+            router.push('/home');
         } catch (e: any) {
             toast.error(e.message || "Failed to join community");
             setIsLoading(false);
@@ -82,7 +82,7 @@ export default function ExploreCommunitiesPage() {
             await joinCommunityById(id);
             toast.success("Joined successfully!");
             router.refresh(); // Refresh dashboard context
-            router.push('/dashboard');
+            router.push('/home');
         } catch (e: any) {
             toast.error(e.message || "Failed to join community");
             setIsLoading(false);
@@ -307,7 +307,7 @@ export default function ExploreCommunitiesPage() {
                                     </Button>
                                 </div>
 
-                                <Button size="lg" className="w-full h-14 text-base shadow-lg shadow-blue-200" onClick={() => router.push('/dashboard')}>
+                                <Button size="lg" className="w-full h-14 text-base shadow-lg shadow-blue-200" onClick={() => router.push('/home')}>
                                     Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </CardContent>

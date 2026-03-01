@@ -63,3 +63,15 @@ export async function deleteAnnouncement(id: number) {
 
     revalidatePath("/announcements");
 }
+
+export async function approveAnnouncement(id: number) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can approve announcements");
+
+    await db.update(announcements).set({ isDraft: false }).where(and(
+        eq(announcements.id, id),
+        eq(announcements.communityId, user.communityId!)
+    ));
+
+    revalidatePath("/announcements");
+}

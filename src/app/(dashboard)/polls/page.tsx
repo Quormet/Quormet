@@ -13,7 +13,7 @@ import { PollActions } from "./poll-actions";
 export default async function PollsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
@@ -42,7 +42,7 @@ export default async function PollsPage() {
 
                 {dbUser.role === "admin" && (
                     <Button asChild>
-                        <Link href="/polls/new"><PlusCircle className="mr-2 h-4 w-4" /> Create Poll</Link>
+                        <Link href="/polls/new"><PlusCircle className="mr-2 h-4 w-4" /> Start a Vote</Link>
                     </Button>
                 )}
             </div>
@@ -55,7 +55,7 @@ export default async function PollsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-slate-900 mb-1">No polls yet</h3>
                         <p className="text-slate-500 max-w-sm mx-auto">
-                            Active polls and voting records will appear here.
+                            {dbUser.role === "admin" ? "Start a vote to get feedback from members." : "Check back later when there are decisions to be made."}
                         </p>
                     </div>
                 ) : (

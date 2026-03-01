@@ -13,7 +13,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     const { id } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser) redirect("/onboarding");
@@ -25,7 +25,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     if (!partner) notFound();
 
     return (
-        <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
+        <div className="flex flex-col h-full">
             {/* Thread header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b bg-white shrink-0">
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 md:hidden" asChild>

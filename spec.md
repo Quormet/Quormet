@@ -1,793 +1,446 @@
-# Quormet — Progress Tracker Spec
-> "The Pizza Tracker for HOA Issues"
-> Moves issue reporting from a black hole into a transparent, staged pipeline.
+# Quormet — Identity & Product Direction Spec
+
+> This document defines what Quormet *is*, how it should feel, and how every
+> feature, screen, and word should reflect that identity.
+> Read this before building or designing anything.
 
 ---
 
-## Overview
+## The Identity
 
-Any resident can submit an issue — a broken gate, burnt-out streetlight, noise complaint, parking violation. The board manages it through 5 stages. The resident can see exactly where their issue is at any time. No more "did anyone read my email?"
+**Quormet is the platform for running any community.**
 
-This feature maps directly to **SDG 11** (safe, resilient communities) and **SDG 16** (accountable institutions).
+Not a dashboard. Not a chat tool. Not a management system.
+A platform. For communities. Any community.
 
----
+Every design decision, every word of copy, every feature interaction should
+pass one test:
 
-## The 5 Stages
+> *Does this help a community govern itself, communicate clearly, and get things done?*
 
-```
-Submitted → Board Review → Vendor Assigned → In Progress → Resolved
-```
-
-| Stage | Who sets it | What it means |
-|-------|-------------|---------------|
-| `submitted` | Auto (on creation) | Issue received, not yet reviewed |
-| `board_review` | Admin | Board has seen it, deciding what to do |
-| `vendor_assigned` | Admin | A contractor or vendor has been assigned |
-| `in_progress` | Admin | Work has started |
-| `resolved` | Admin | Issue is fixed |
+If yes, it belongs. If not, it doesn't.
 
 ---
 
-## UI — What It Looks Like
+## The One-Sentence Pitch
 
-### Issue List Page (`/issues`)
+> Quormet is the community layer the internet is missing — the first platform
+> built from the ground up for the way communities actually work, with real
+> governance, real transparency, and an AI that runs your community alongside you.
 
-**Member view** — their own issues only:
-```
-┌─────────────────────────────────────────────────────┐
-│  My Issues                          [+ Report Issue] │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  🔴 Broken gate latch — Building A entrance        │
-│  Submitted Jan 15 · ●●○○○ Board Review             │
-│                                                     │
-│  🟡 Parking lot light out — Spot 24                │
-│  Submitted Jan 8  · ●●●●○ In Progress              │
-│                                                     │
-│  🟢 Graffiti on east wall                          │
-│  Submitted Dec 20 · ●●●●● Resolved ★★★★☆          │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Admin view** — all community issues with filters:
-```
-┌─────────────────────────────────────────────────────┐
-│  All Issues (12)        [Filter ▾]  [+ New Issue]  │
-├──────────┬──────────┬──────────┬──────────┬─────────┤
-│Submitted │  Board   │ Vendor   │   In     │Resolved │
-│    3     │  Review  │Assigned  │ Progress │    4    │
-│          │    2     │    1     │    2     │         │
-├─────────────────────────────────────────────────────┤
-│  🔴 Broken gate latch          Sarah J.  Jan 15    │
-│     ●●○○○ Board Review         [Update Status ▾]   │
-│                                                     │
-│  🔴 Pool pump noise            Mike C.   Jan 14    │
-│     ●○○○○ Submitted            [Update Status ▾]   │
-└─────────────────────────────────────────────────────┘
-```
+This is not marketing copy. This is the product vision. Every person on the
+team should be able to say this from memory.
 
 ---
 
-### Issue Detail Page (`/issues/[id]`)
+## What Quormet Is Not
 
-This is the pizza tracker moment. Full page showing the issue and its live progress.
+Getting this wrong is just as important as getting it right.
 
-```
-┌──────────────────────────────────────────────────────┐
-│  ← Back to Issues                                    │
-│                                                      │
-│  Broken gate latch — Building A entrance             │
-│  Reported by Sarah Johnson · January 15, 2026        │
-│  Category: Maintenance                               │
-│                                                      │
-│  ────────────────── PROGRESS ──────────────────────  │
-│                                                      │
-│  ●────────●────────○────────○────────○              │
-│  Submitted  Board             Vendor   In      Resolved
-│  Jan 15     Review            Assigned Progress      │
-│             Jan 16                                   │
-│                                                      │
-│  ──────────────── DESCRIPTION ─────────────────────  │
-│                                                      │
-│  The latch on the main entrance gate to Building A   │
-│  is broken. The gate swings open freely and does     │
-│  not lock. This is a security concern.               │
-│                                                      │
-│  📷 [photo attached]                                 │
-│                                                      │
-│  ─────────────────── UPDATES ──────────────────────  │
-│                                                      │
-│  Jan 16 — Board Review                              │
-│  "We've reviewed this and are getting quotes from   │
-│   two vendors."                                      │
-│                                                      │
-│  Jan 15 — Submitted                                  │
-│  Issue received.                                     │
-│                                                      │
-│  ─────────── ADMIN CONTROLS (admin only) ──────────  │
-│                                                      │
-│  Status:    [Board Review          ▾]                │
-│  Assigned:  [Select vendor...      ▾]                │
-│  Note:      [Add an update note...   ]               │
-│             [Save Update]                            │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-```
+| What people might compare it to | Why Quormet is different |
+|----------------------------------|--------------------------|
+| **Slack / Discord** | Those are conversation tools. Quormet is a governance tool. Slack gives you a place to talk about decisions. Quormet gives you the structure to make them, record them, and act on them. |
+| **Nextdoor** | Nextdoor is a social network for neighborhoods. Quormet is an operating system for communities. Nextdoor optimizes for engagement. Quormet optimizes for outcomes. |
+| **Buildium / AppFolio** | Those are property management tools for landlords. Quormet is a community tool for members. They're built for administrators. Quormet is built for everyone. |
+| **Google Groups / Facebook Groups** | Unstructured. No governance. No accountability. No institutional memory. Quormet brings structure to everything those tools leave chaotic. |
 
 ---
 
-### Submit Issue Form (Modal)
+## The Primary User
 
-Triggered by "Report Issue" button. Available to all members.
+Quormet is for **anyone who belongs to a community or group.**
 
-```
-Report an Issue
-───────────────────────────────────
-Title           [Short description of the issue  ]
+This means:
+- The HOA board member trying to get a quorum
+- The condo resident wondering if their renovation needs approval
+- The sports club treasurer chasing unpaid dues
+- The church committee planning the annual gala
+- The tenant union organizer tracking a landlord dispute
+- The co-working space member looking for a freelancer
+- The university residence hall RA managing 200 students
 
-Category        [Maintenance         ▾]
-                Options: Maintenance / Safety /
-                         Noise / Parking / Other
-
-Location        [Where is this? Building, unit,  ]
-                [area of the community            ]
-
-Description     [                                ]
-                [Describe the issue in detail... ]
-                [                                ]
-
-Photo           [📎 Attach a photo (optional)   ]
-                Accepted: JPG, PNG — max 5MB
-
-                [Cancel]    [Submit Issue →]
-```
+There is no single primary user. The platform serves the whole community —
+admins and members alike — because a community only works when everyone
+is included.
 
 ---
 
-## Vendor Scorecard
+## The Emotional Experience
 
-When an issue moves to `resolved`, the reporting resident sees a rating prompt.
+How should using Quormet feel?
 
-**On the issue detail page (resolved state):**
-```
-┌──────────────────────────────────────────────────────┐
-│  ✅ This issue has been resolved.                    │
-│                                                      │
-│  How was the work done by [vendor name]?             │
-│                                                      │
-│  ☆ ☆ ☆ ☆ ☆   (tap to rate)                         │
-│                                                      │
-│  Leave a comment (optional):                         │
-│  [                                              ]    │
-│                                                      │
-│  [Submit Rating]                                     │
-└──────────────────────────────────────────────────────┘
-```
+**For admins:**
+Like having a co-pilot. The AI handles the repetitive work. The intelligence
+surfaces what needs attention. The governance tools give every decision a
+paper trail. Running a community should feel manageable, not overwhelming.
 
-**Vendor Directory (admin only) — `/settings/vendors`:**
-```
-┌──────────────────────────────────────────────────────┐
-│  Vendor Directory                    [+ Add Vendor]  │
-├──────────────────────────────────────────────────────┤
-│  ABC Gate Repair                                     │
-│  ★★★★☆  4.2 avg · 5 jobs completed                  │
-│  Last used: Jan 16, 2026                             │
-│  Categories: Maintenance, Security                   │
-│                                                      │
-│  Bob's Electric                                      │
-│  ★★★★★  4.8 avg · 12 jobs completed                 │
-│  Last used: Dec 10, 2025                             │
-│  Categories: Electrical                              │
-└──────────────────────────────────────────────────────┘
-```
+**For members:**
+Like being genuinely included. Not just receiving announcements — actually
+having a voice, seeing your issue get fixed, knowing where your dues went,
+feeling like the community is being run well. Quormet should make members
+feel like they live in a community that works.
+
+**For everyone:**
+Like the tools finally match the task. Every other platform makes community
+management harder than it should be. Quormet should feel like the obvious
+tool — the one that should have always existed.
 
 ---
 
-## Database Schema
+## Voice & Tone
 
-Add these tables to `src/db/schema.ts`:
+Every word in the product — buttons, empty states, error messages, onboarding
+copy — should reflect this identity.
+
+### Principles
+
+**Civic, not corporate.**
+This is a community platform, not enterprise software. The language should
+feel like it was written by someone who cares about their neighborhood, not
+by a product manager.
+
+✅ "Your community, your rules"
+❌ "Configure your organization's governance parameters"
+
+**Confident, not jargon-heavy.**
+Quormet is doing something real. Say it plainly.
+
+✅ "Make a decision together"
+❌ "Leverage collaborative decision-making workflows"
+
+**Warm, not casual.**
+This isn't a startup trying to be your friend. It's a serious tool for
+serious community work. But it's human.
+
+✅ "Looks like nothing needs your attention right now."
+❌ "No pending action items in queue."
+❌ "Hey! You're all good! 🎉"
+
+**Active, not passive.**
+Quormet helps communities act. The language should reflect that.
+
+✅ "Start a vote" / "Fix this issue" / "Bring your community together"
+❌ "A vote can be initiated" / "Issues may be submitted"
+
+### Specific Word Choices
+
+| Don't say | Say instead |
+|-----------|-------------|
+| Residents | Members |
+| Neighbors | Members / Fellow members |
+| Users | Members / Admins |
+| HOA | Community (unless specifically an HOA) |
+| Bylaws | Community rules / Guidelines |
+| Dues | Membership fees (or "dues" if the community calls them that) |
+| Dashboard | Home |
+| Submit | Post / Share / Send |
+| Administrator | Admin / Board member |
+| Tenants | Members |
+
+---
+
+## Onboarding — The First Impression
+
+Onboarding is where the identity is established. It should feel like founding
+something, not filling out a form.
+
+### What it should feel like
+
+The moment an admin creates a community on Quormet, they should feel like
+they just built something real. Not "you've set up your account" — more like
+"your community now has a home."
+
+### Copy direction
+
+Current (wrong):
+> "Enter your HOA name"
+> "Set up your account"
+
+Should be:
+> "What are you building?"
+> "Give your community a name"
+> "Your community is ready."
+> "Share this code with your members: **MAPLE1**"
+
+### Community type selector
+
+When creating a community, members choose what kind it is. This isn't just
+for terminology — it shapes the entire onboarding experience and sets the
+right context for the AI assistant's system prompt.
+
+```
+What kind of community is this?
+
+🏘️  HOA / Condo Association
+🏢  Apartment Building
+⚽  Sports Club / Team
+⛪  Religious Organization
+🎓  Student / Campus Group
+💼  Professional Association
+✊  Tenant Union
+🏡  Neighborhood Group
+🔧  Co-working / Shared Space
+🌍  Other
+```
+
+Each type gets slightly different default terminology throughout the app.
+Implement this as a `communityType` field on the `communities` table and
+a helper function that maps types to terminology:
 
 ```ts
-// Issues table
-export const issues = pgTable('issues', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  communityId: uuid('community_id').references(() => communities.id).notNull(),
-  reportedBy: uuid('reported_by').references(() => users.id).notNull(),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  category: text('category').notNull(), // maintenance | safety | noise | parking | other
-  location: text('location').notNull(),
-  photoUrl: text('photo_url'),
-  status: text('status').notNull().default('submitted'),
-  // submitted | board_review | vendor_assigned | in_progress | resolved
-  assignedVendorId: uuid('assigned_vendor_id').references(() => vendors.id),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
-
-// Issue updates / activity log
-export const issueUpdates = pgTable('issue_updates', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  issueId: uuid('issue_id').references(() => issues.id).notNull(),
-  updatedBy: uuid('updated_by').references(() => users.id).notNull(),
-  previousStatus: text('previous_status'),
-  newStatus: text('new_status').notNull(),
-  note: text('note'), // optional admin note with each status change
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
-// Vendors table
-export const vendors = pgTable('vendors', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  communityId: uuid('community_id').references(() => communities.id).notNull(),
-  name: text('name').notNull(),
-  categories: text('categories').array(), // ['maintenance', 'electrical', etc]
-  phone: text('phone'),
-  email: text('email'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
-// Vendor ratings
-export const vendorRatings = pgTable('vendor_ratings', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  vendorId: uuid('vendor_id').references(() => vendors.id).notNull(),
-  issueId: uuid('issue_id').references(() => issues.id).notNull(),
-  ratedBy: uuid('rated_by').references(() => users.id).notNull(),
-  rating: integer('rating').notNull(), // 1-5
-  comment: text('comment'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-```
-
-After adding these, run:
-```bash
-npx drizzle-kit push
+// src/utils/communityTerms.ts
+export function getTerms(communityType: string) {
+  const terms: Record<string, Record<string, string>> = {
+    hoa: {
+      members: 'Residents',
+      fees: 'Dues',
+      rules: 'Bylaws',
+      board: 'Board',
+    },
+    sports_club: {
+      members: 'Members',
+      fees: 'Membership fees',
+      rules: 'Club rules',
+      board: 'Committee',
+    },
+    religious: {
+      members: 'Congregation',
+      fees: 'Tithes / Contributions',
+      rules: 'Guidelines',
+      board: 'Leadership',
+    },
+    tenant_union: {
+      members: 'Tenants',
+      fees: 'Union dues',
+      rules: 'Bylaws',
+      board: 'Organizers',
+    },
+    default: {
+      members: 'Members',
+      fees: 'Membership fees',
+      rules: 'Community rules',
+      board: 'Admin',
+    },
+  }
+  return terms[communityType] ?? terms.default
+}
 ```
 
 ---
 
-## Server Actions
+## The Dashboard — Command Center, Not Feed
 
-`src/app/(dashboard)/issues/actions.ts`
+The dashboard is the heart of Quormet. It should feel like mission control,
+not a social media feed.
+
+### What it communicates at a glance
+
+In under 5 seconds, anyone landing on the dashboard should know:
+1. What needs their attention right now
+2. The current health of their community
+3. What's happening soon
+
+### Layout principles
+
+**Hierarchy matters.** Personal to-dos come before community updates.
+Action items come before passive information. Urgency is always visible.
+
+**No empty space.** Every section either shows real data or a meaningful
+empty state with a clear CTA. A blank dashboard is a broken dashboard.
+
+**The AI is always present.** The assistant panel is never hidden or collapsed
+by default. It's core to the identity — not an add-on.
+
+### The community health bar (admin only)
+
+A single visual at the top of the dashboard that communicates the overall
+health of the community at a glance. Calculated from:
+
+- % of members who voted in the last poll
+- % of dues paid
+- Issues resolved vs open
+- Days since last announcement
+
+```
+Community Health
+████████████░░░░  73%  Good
+Dues collection is dragging your score down.  [View]
+```
+
+This is the number judges will screenshot. Make it real.
 
 ```ts
-'use server'
-import { db } from '@/db'
-import { issues, issueUpdates, vendorRatings } from '@/db/schema'
-import { eq, and } from 'drizzle-orm'
-import { getCurrentUser } from '@/utils/getCurrentUser'
-import { revalidatePath } from 'next/cache'
+// src/utils/communityHealth.ts
+export async function getCommunityHealth(communityId: string): Promise<{
+  score: number
+  label: 'Excellent' | 'Good' | 'Needs Attention' | 'Critical'
+  insight: string
+  color: string
+}> {
+  // Each metric contributes 25 points max
+  const [pollParticipation, duesRate, issueResolution, communicationFrequency] =
+    await Promise.all([
+      getPollParticipationRate(communityId),   // 0-25
+      getDuesCollectionRate(communityId),       // 0-25
+      getIssueResolutionRate(communityId),      // 0-25
+      getCommunicationScore(communityId),       // 0-25
+    ])
 
-// Submit a new issue (any member)
-export async function submitIssue(formData: FormData) {
-  const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
+  const score = pollParticipation + duesRate + issueResolution + communicationFrequency
 
-  const [created] = await db.insert(issues).values({
-    communityId: user.communityId!,
-    reportedBy: user.id,
-    title: formData.get('title') as string,
-    description: formData.get('description') as string,
-    category: formData.get('category') as string,
-    location: formData.get('location') as string,
-    photoUrl: formData.get('photoUrl') as string | null,
-    status: 'submitted',
-  }).returning()
-
-  // Log the initial status
-  await db.insert(issueUpdates).values({
-    issueId: created.id,
-    updatedBy: user.id,
-    previousStatus: null,
-    newStatus: 'submitted',
-    note: 'Issue received.',
-  })
-
-  revalidatePath('/issues')
-  return created
-}
-
-// Update issue status (admin only)
-export async function updateIssueStatus(
-  issueId: string,
-  newStatus: string,
-  note?: string,
-  vendorId?: string
-) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'admin') throw new Error('Forbidden')
-
-  const [current] = await db.select().from(issues).where(eq(issues.id, issueId))
-  if (!current) throw new Error('Issue not found')
-
-  await db.update(issues)
-    .set({
-      status: newStatus,
-      assignedVendorId: vendorId ?? current.assignedVendorId,
-      updatedAt: new Date(),
-    })
-    .where(eq(issues.id, issueId))
-
-  await db.insert(issueUpdates).values({
-    issueId,
-    updatedBy: user.id,
-    previousStatus: current.status,
-    newStatus,
-    note: note ?? null,
-  })
-
-  revalidatePath(`/issues/${issueId}`)
-  revalidatePath('/issues')
-}
-
-// Get all issues (admin) or own issues (member)
-export async function getIssues() {
-  const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
-
-  if (user.role === 'admin') {
-    return db.select().from(issues)
-      .where(eq(issues.communityId, user.communityId!))
-      .orderBy(issues.createdAt)
-  }
-
-  return db.select().from(issues)
-    .where(and(
-      eq(issues.communityId, user.communityId!),
-      eq(issues.reportedBy, user.id)
-    ))
-    .orderBy(issues.createdAt)
-}
-
-// Get single issue with updates
-export async function getIssue(id: string) {
-  const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const [issue] = await db.select().from(issues).where(eq(issues.id, id))
-  const updates = await db.select().from(issueUpdates)
-    .where(eq(issueUpdates.issueId, id))
-    .orderBy(issueUpdates.createdAt)
-
-  return { issue, updates }
-}
-
-// Submit vendor rating (member, resolved issues only)
-export async function submitVendorRating(
-  issueId: string,
-  vendorId: string,
-  rating: number,
-  comment?: string
-) {
-  const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
-
-  await db.insert(vendorRatings).values({
-    vendorId,
-    issueId,
-    ratedBy: user.id,
-    rating,
-    comment: comment ?? null,
-  })
-
-  revalidatePath(`/issues/${issueId}`)
+  if (score >= 85) return { score, label: 'Excellent', color: 'text-green-500',
+    insight: 'Your community is thriving.' }
+  if (score >= 65) return { score, label: 'Good', color: 'text-blue-500',
+    insight: 'A few things could use attention.' }
+  if (score >= 40) return { score, label: 'Needs Attention', color: 'text-yellow-500',
+    insight: 'Several areas need improvement.' }
+  return { score, label: 'Critical', color: 'text-red-500',
+    insight: 'Your community needs immediate attention.' }
 }
 ```
 
 ---
 
-## The Progress Stepper Component
+## The AI Assistant — The Soul of Quormet
 
-`src/components/issues/ProgressStepper.tsx`
+The AI assistant is not a chatbot bolted onto a dashboard. It is the
+expression of Quormet's core identity.
 
-```tsx
-import { Check } from 'lucide-react'
-import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
+Every other community tool is dumb — it stores data and shows it back to you.
+Quormet understands your community and helps you run it.
 
-const STAGES = [
-  { key: 'submitted',        label: 'Submitted' },
-  { key: 'board_review',     label: 'Board Review' },
-  { key: 'vendor_assigned',  label: 'Vendor Assigned' },
-  { key: 'in_progress',      label: 'In Progress' },
-  { key: 'resolved',         label: 'Resolved' },
-]
+### How the AI should be introduced
 
-type Update = {
-  newStatus: string
-  createdAt: Date
-}
+Not as a feature. As a collaborator.
 
-export default function ProgressStepper({
-  currentStatus,
-  updates,
-}: {
-  currentStatus: string
-  updates: Update[]
-}) {
-  const currentIndex = STAGES.findIndex(s => s.key === currentStatus)
-
-  const getDateForStage = (stageKey: string) =>
-    updates.find(u => u.newStatus === stageKey)?.createdAt
-
-  return (
-    <div className="w-full py-6">
-      <div className="flex items-center justify-between relative">
-        {/* Connecting line */}
-        <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted" />
-        <div
-          className="absolute top-5 left-0 h-0.5 bg-primary transition-all duration-500"
-          style={{ width: `${(currentIndex / (STAGES.length - 1)) * 100}%` }}
-        />
-
-        {STAGES.map((stage, index) => {
-          const isCompleted = index < currentIndex
-          const isCurrent = index === currentIndex
-          const isPending = index > currentIndex
-          const date = getDateForStage(stage.key)
-
-          return (
-            <div key={stage.key} className="flex flex-col items-center gap-2 z-10">
-              {/* Circle */}
-              <div className={cn(
-                'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300',
-                isCompleted && 'bg-primary border-primary text-primary-foreground',
-                isCurrent && 'bg-background border-primary text-primary ring-4 ring-primary/20',
-                isPending && 'bg-background border-muted text-muted-foreground'
-              )}>
-                {isCompleted
-                  ? <Check className="w-4 h-4" />
-                  : <span className="text-xs font-bold">{index + 1}</span>
-                }
-              </div>
-
-              {/* Label */}
-              <div className="text-center">
-                <p className={cn(
-                  'text-xs font-medium',
-                  (isCompleted || isCurrent) ? 'text-foreground' : 'text-muted-foreground'
-                )}>
-                  {stage.label}
-                </p>
-                {date && (
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(date), 'MMM d')}
-                  </p>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 ```
+Meet your community assistant.
+
+It knows your rules, your members, your history, and your
+current state. Ask it anything. Tell it what to do.
+
+[What are our quiet hours?]
+[Schedule our next meeting]
+[Who hasn't paid dues?]
+[Draft an announcement about the parking situation]
+```
+
+### What the AI must always be able to do
+
+These are non-negotiable for the demo:
+
+1. Answer questions about community rules from uploaded documents
+2. Create an announcement from a natural language description
+3. Create a poll from a natural language description
+4. Schedule an event from a natural language description
+5. Report on community stats ("how many members have paid dues?")
+6. Surface the right action at the right time ("your poll closes tomorrow,
+   want me to send a reminder?")
+
+### What the AI should never do
+
+- Make up rules that aren't in the community's documents
+- Take admin actions when the user is a member
+- Be sycophantic ("Great question!")
+- Give long-winded responses in a chat interface
+- Say "As an AI language model..."
 
 ---
 
-## Status Badge Component
+## Feature Identity — How Each Feature Reflects the Mission
 
-`src/components/issues/StatusBadge.tsx`
+Every feature should have a clear answer to "why does this exist?"
 
-```tsx
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-
-const STATUS_CONFIG = {
-  submitted:       { label: 'Submitted',       color: 'bg-slate-100 text-slate-700' },
-  board_review:    { label: 'Board Review',     color: 'bg-yellow-100 text-yellow-700' },
-  vendor_assigned: { label: 'Vendor Assigned',  color: 'bg-blue-100 text-blue-700' },
-  in_progress:     { label: 'In Progress',      color: 'bg-orange-100 text-orange-700' },
-  resolved:        { label: 'Resolved',         color: 'bg-green-100 text-green-700' },
-}
-
-export default function StatusBadge({ status }: { status: string }) {
-  const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]
-  if (!config) return null
-
-  return (
-    <Badge className={cn('font-medium border-0', config.color)}>
-      {config.label}
-    </Badge>
-  )
-}
-```
+| Feature | Why it exists | What it replaces |
+|---------|--------------|-----------------|
+| **Announcements** | Institutional communication with a record | Email chains nobody reads |
+| **Polls & Voting** | Collective decision-making with accountability | WhatsApp votes, show of hands |
+| **Issues / Progress Tracker** | Transparent operations | Requests that disappear into inboxes |
+| **Document Vault** | Institutional memory | PDFs nobody can find |
+| **Events & RSVPs** | Community coordination | Eventbrite + a separate email |
+| **Member Directory** | Trusted connections within the community | LinkedIn for strangers |
+| **Community Board** | Internal economy and mutual aid | Facebook Marketplace without trust |
+| **AI Assistant** | Institutional intelligence | Googling your own bylaws |
+| **Intelligence Feed** | Proactive governance | Things falling through the cracks |
+| **Dues & Payments** | Financial accountability | Venmo requests and spreadsheets |
 
 ---
 
-## Admin Status Update UI
+## What "Done" Looks Like for Identity
 
-The dropdown + note field shown on the issue detail page for admins.
+The product has the right identity when:
 
-`src/components/issues/AdminStatusPanel.tsx`
-
-```tsx
-'use client'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { updateIssueStatus } from '@/app/(dashboard)/issues/actions'
-import { Loader2 } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
-
-const STATUSES = [
-  { value: 'submitted',        label: 'Submitted' },
-  { value: 'board_review',     label: 'Board Review' },
-  { value: 'vendor_assigned',  label: 'Vendor Assigned' },
-  { value: 'in_progress',      label: 'In Progress' },
-  { value: 'resolved',         label: 'Resolved' },
-]
-
-export default function AdminStatusPanel({
-  issueId,
-  currentStatus,
-}: {
-  issueId: string
-  currentStatus: string
-}) {
-  const [status, setStatus] = useState(currentStatus)
-  const [note, setNote] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
-
-  async function handleSave() {
-    setLoading(true)
-    try {
-      await updateIssueStatus(issueId, status, note)
-      setNote('')
-      toast({ title: 'Status updated', description: `Issue moved to ${status.replace('_', ' ')}` })
-    } catch {
-      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
-      <p className="text-sm font-semibold">Admin Controls</p>
-
-      <div className="space-y-2">
-        <label className="text-xs text-muted-foreground">Status</label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUSES.map(s => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-xs text-muted-foreground">Update Note (optional)</label>
-        <Textarea
-          value={note}
-          onChange={e => setNote(e.target.value)}
-          placeholder="Add a note for the resident..."
-          className="resize-none"
-          rows={3}
-        />
-      </div>
-
-      <Button onClick={handleSave} disabled={loading} className="w-full">
-        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-        Save Update
-      </Button>
-    </div>
-  )
-}
-```
+- [ ] A judge can describe what Quormet is in one sentence after a 2-minute demo
+- [ ] The word "neighbor" does not appear anywhere in the UI
+- [ ] Onboarding includes a community type selector
+- [ ] Community type changes terminology throughout the app
+- [ ] The dashboard has a community health score
+- [ ] The AI assistant is visible on the dashboard by default, not hidden
+- [ ] Every empty state has a human, action-oriented message
+- [ ] Every button uses active language ("Start a vote" not "Create poll")
+- [ ] The product works equally well for an HOA and a sports club
+- [ ] The pitch "Quormet is the community layer the internet is missing"
+      makes sense after seeing the product
 
 ---
 
-## Vendor Star Rating Component
+## The Demo Script
 
-`src/components/issues/StarRating.tsx`
+This is the exact flow to walk through for judges. Every step should
+reinforce the identity.
 
-```tsx
-'use client'
-import { useState } from 'react'
-import { Star } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { submitVendorRating } from '@/app/(dashboard)/issues/actions'
-import { useToast } from '@/components/ui/use-toast'
-import { cn } from '@/lib/utils'
+**Opening line:**
+> "Every community in the world — HOAs, clubs, unions, churches — is running
+> on tools built for individuals, not groups. Quormet fixes that."
 
-export default function StarRating({
-  issueId,
-  vendorId,
-  vendorName,
-}: {
-  issueId: string
-  vendorId: string
-  vendorName: string
-}) {
-  const [hovered, setHovered] = useState(0)
-  const [selected, setSelected] = useState(0)
-  const [comment, setComment] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
+**Step 1 — Onboarding** (30 seconds)
+Show the community type selector. Create a community. Show the join code.
+Say: "Any community. Any kind. Set up in 60 seconds."
 
-  async function handleSubmit() {
-    if (!selected) return
-    setLoading(true)
-    try {
-      await submitVendorRating(issueId, vendorId, selected, comment)
-      setSubmitted(true)
-      toast({ title: 'Rating submitted', description: 'Thank you for your feedback!' })
-    } catch {
-      toast({ title: 'Error', description: 'Failed to submit rating', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-    }
-  }
+**Step 2 — Dashboard** (30 seconds)
+Show the community health score. Show the personal to-do list. Show the
+intelligence nudges. Say: "The dashboard tells you exactly what needs
+attention — for the admin and for every member."
 
-  if (submitted) return (
-    <div className="border rounded-lg p-4 text-center text-sm text-muted-foreground">
-      ✅ Thanks for rating {vendorName}!
-    </div>
-  )
+**Step 3 — AI Assistant** (60 seconds)
+Type: "Are dogs allowed in the pool area?"
+Show it cite the bylaws.
+Type: "Schedule a community cleanup for March 20 at 9am"
+Show the event appear instantly.
+Say: "The AI doesn't just answer questions. It runs your community alongside you."
 
-  return (
-    <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
-      <p className="text-sm font-medium">How was the work by {vendorName}?</p>
+**Step 4 — Progress Tracker** (30 seconds)
+Show an issue moving through stages. Show the timeline.
+Say: "No more black holes. Every issue has a status. Every member can see it."
 
-      {/* Stars */}
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map(star => (
-          <button
-            key={star}
-            onMouseEnter={() => setHovered(star)}
-            onMouseLeave={() => setHovered(0)}
-            onClick={() => setSelected(star)}
-          >
-            <Star className={cn(
-              'w-7 h-7 transition-colors',
-              star <= (hovered || selected)
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-muted-foreground'
-            )} />
-          </button>
-        ))}
-      </div>
+**Step 5 — Voting** (30 seconds)
+Show a poll with a quorum progress bar.
+Say: "Decisions are made transparently, with a record, and with accountability."
 
-      <Textarea
-        value={comment}
-        onChange={e => setComment(e.target.value)}
-        placeholder="Leave a comment (optional)..."
-        className="resize-none"
-        rows={2}
-      />
-
-      <Button
-        onClick={handleSubmit}
-        disabled={!selected || loading}
-        size="sm"
-        className="w-full"
-      >
-        Submit Rating
-      </Button>
-    </div>
-  )
-}
-```
+**Closing line:**
+> "There are 400 million community organizations in the world. Every single
+> one of them deserves tools this good."
 
 ---
 
-## Navigation
+## For the Business Innovator Award
 
-Add Issues to the sidebar nav in your layout:
+If applying, the identity argument is your strongest asset:
 
-```tsx
-{ href: '/issues', icon: ClipboardList, label: 'Issues' }
-```
+**The market:** Every human institution that isn't a corporation is a community.
+HOAs, clubs, unions, churches, student orgs, co-ops. Hundreds of millions of
+organizations globally, almost none of them with purpose-built software.
 
-Import `ClipboardList` from `lucide-react`.
+**The moat:** Institutional memory. Once a community's bylaws, history,
+decisions, and vendor relationships live in Quormet, switching costs are
+enormous. The AI gets smarter about your community the longer you use it.
 
----
+**The SDG argument:** Quormet directly addresses SDG 11 and 16 not as a
+side effect but as its core value proposition. Transparent governance,
+accountable institutions, inclusive participation — these aren't features,
+they're what the product is.
 
-## Seed Data
-
-Add to `src/db/seed.ts`:
-
-```ts
-// Vendors
-const [vendor1] = await db.insert(vendors).values({
-  communityId: community.id,
-  name: 'ABC Gate Repair',
-  categories: ['maintenance', 'security'],
-  phone: '(303) 555-0120',
-  email: 'contact@abcgate.com',
-}).returning()
-
-const [vendor2] = await db.insert(vendors).values({
-  communityId: community.id,
-  name: "Bob's Electric",
-  categories: ['electrical'],
-  phone: '(303) 555-0145',
-}).returning()
-
-// Issues — mix of statuses for a good demo
-const [issue1] = await db.insert(issues).values({
-  communityId: community.id,
-  reportedBy: memberUser.id,
-  title: 'Broken gate latch — Building A entrance',
-  description: 'The latch on the main entrance gate is broken. The gate swings open freely.',
-  category: 'maintenance',
-  location: 'Building A main entrance',
-  status: 'board_review',
-}).returning()
-
-const [issue2] = await db.insert(issues).values({
-  communityId: community.id,
-  reportedBy: memberUser2.id,
-  title: 'Parking lot light out — Spot 24',
-  description: 'The overhead light near spot 24 has been out for a week. Safety concern at night.',
-  category: 'safety',
-  location: 'Parking lot, spot 24',
-  status: 'in_progress',
-  assignedVendorId: vendor2.id,
-}).returning()
-
-const [issue3] = await db.insert(issues).values({
-  communityId: community.id,
-  reportedBy: memberUser.id,
-  title: 'Graffiti on east wall',
-  description: 'Graffiti appeared overnight on the east perimeter wall near the mailboxes.',
-  category: 'maintenance',
-  location: 'East perimeter wall',
-  status: 'resolved',
-  assignedVendorId: vendor1.id,
-}).returning()
-
-// Issue updates (activity log)
-await db.insert(issueUpdates).values([
-  { issueId: issue1.id, updatedBy: adminUser.id, previousStatus: null,
-    newStatus: 'submitted', note: 'Issue received.' },
-  { issueId: issue1.id, updatedBy: adminUser.id, previousStatus: 'submitted',
-    newStatus: 'board_review', note: 'Getting quotes from vendors.' },
-  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: null,
-    newStatus: 'submitted', note: 'Issue received.' },
-  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'submitted',
-    newStatus: 'board_review', note: null },
-  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'board_review',
-    newStatus: 'vendor_assigned', note: "Bob's Electric assigned." },
-  { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'vendor_assigned',
-    newStatus: 'in_progress', note: 'Electrician on site today.' },
-  { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: null,
-    newStatus: 'submitted', note: 'Issue received.' },
-  { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: 'submitted',
-    newStatus: 'resolved', note: 'Wall cleaned and repainted.' },
-])
-```
-
----
-
-## ✅ Done When
-
-- [ ] `npx drizzle-kit push` runs without errors with new tables
-- [ ] Any member can submit an issue via the modal form
-- [ ] Issue list shows member's own issues (member) or all issues (admin)
-- [ ] Issue detail page shows the 5-stage progress stepper with correct current stage
-- [ ] Progress stepper fills in with dates from the issue updates log
-- [ ] Admin can change status via dropdown + optional note
-- [ ] Status change appears immediately in the updates timeline on the detail page
-- [ ] Resolved issues show the star rating prompt to the reporting resident
-- [ ] Star rating saves to DB and shows "Thanks for rating" on resubmit
-- [ ] Vendor directory page shows all vendors with average rating
-- [ ] Issues page is in the sidebar nav
-- [ ] Seed data creates 3 issues at different stages for demo
+**The business model:** SaaS with a free tier for small communities,
+paid tiers for larger ones. Low CAC because admins self-serve. High
+retention because the institutional memory is irreplaceable. Natural
+expansion because communities grow.

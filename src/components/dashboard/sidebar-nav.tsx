@@ -2,24 +2,26 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building, LayoutDashboard, Megaphone, Vote, Coins, FileText, Calendar, Users, LogOut, Settings, Menu, ChevronDown, Check, ClipboardList, Briefcase, MessageSquare, Search } from "lucide-react";
+import { Building, LayoutDashboard, Megaphone, Vote, Coins, FileText, Calendar, Users, LogOut, Settings, Menu, ChevronDown, Check, ClipboardList, Briefcase, MessageSquare, Search, HandHelping } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState, useTransition } from "react";
 import { signOut } from "@/app/auth/actions";
 import { setActiveCommunity } from "@/utils/setCommunity";
+import { getTerms } from "@/utils/communityTerms";
 
 const allNavItems = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Overview", href: "/home", icon: LayoutDashboard },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "Voting & Polls", href: "/polls", icon: Vote },
-    { name: "Dues & Payments", href: "/dues", icon: Coins },
+    { name: "Dues & Payments", href: "/payments", icon: Coins },
     { name: "Document Vault", href: "/documents", icon: FileText },
     { name: "Events", href: "/events", icon: Calendar },
     { name: "Directory", href: "/directory", icon: Users },
     { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Issues", href: "/issues", icon: ClipboardList },
+    { name: "Help Board", href: "/board", icon: HandHelping },
     { name: "Explore Communities", href: "/communities", icon: Search },
 ];
 
@@ -37,6 +39,7 @@ type Community = {
 export function SidebarNav({
     role,
     communityName,
+    communityType = "default",
     joinCode,
     userName,
     activeCommunityId,
@@ -45,6 +48,7 @@ export function SidebarNav({
 }: {
     role: string;
     communityName: string;
+    communityType?: string;
     joinCode: string;
     userName: string;
     activeCommunityId?: number;
@@ -55,7 +59,16 @@ export function SidebarNav({
     const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
-    const navItems = [...allNavItems];
+    const terms = getTerms(communityType);
+    const duesLabelCapitalized = terms.fees.charAt(0).toUpperCase() + terms.fees.slice(1);
+
+    const navItems = allNavItems.map(item => {
+        if (item.name === "Dues & Payments") {
+            return { ...item, name: `${duesLabelCapitalized} & Payments` };
+        }
+        return item;
+    });
+
     if (role === "admin") {
         navItems.push({ name: "Vendors", href: "/vendors", icon: Briefcase });
         navItems.push({ name: "Settings", href: "/settings", icon: Settings });
@@ -162,7 +175,7 @@ export function SidebarNav({
         <>
             {/* Mobile Header & Nav */}
             <div className="md:hidden flex h-14 items-center justify-between px-4 border-b bg-white sticky top-0 z-30">
-                <Link href="/dashboard" className="flex items-center gap-2">
+                <Link href="/home" className="flex items-center gap-2">
                     <Building className="h-5 w-5 text-blue-600" />
                     <span className="font-bold tracking-tight">Quormet</span>
                 </Link>
@@ -192,9 +205,9 @@ export function SidebarNav({
             </div>
 
             {/* Desktop Sidebar */}
-            <aside className="w-64 border-r bg-white flex-col hidden md:flex shrink-0 h-screen sticky top-0">
+            <aside className="w-64 border-r bg-white flex-col hidden md:flex shrink-0">
                 <div className="h-16 flex items-center px-6 border-b shrink-0">
-                    <Link href="/dashboard" className="flex items-center gap-2">
+                    <Link href="/home" className="flex items-center gap-2">
                         <Building className="h-6 w-6 text-blue-600" />
                         <span className="font-bold text-lg tracking-tight">Quormet</span>
                     </Link>

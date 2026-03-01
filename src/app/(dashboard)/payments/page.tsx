@@ -11,11 +11,12 @@ import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink, BrainCircuit } f
 import { format } from "date-fns";
 import { createCheckoutSession, updateCommunityDues, markUserPaid } from "./actions";
 import { WolframAnalytics } from "./wolfram_analytics";
+import { getTerms } from "@/utils/communityTerms";
 
 export default async function DuesPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
@@ -36,11 +37,14 @@ export default async function DuesPage() {
 
     const duesAmountDollars = (community.duesAmount / 100).toFixed(2);
     const duesConfigured = community.duesAmount > 0;
+    const terms = getTerms(community.communityType || "default");
+    const duesLabel = terms.fees;
+    const duesLabelCapitalized = duesLabel.charAt(0).toUpperCase() + duesLabel.slice(1);
 
     return (
         <div className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dues & Payments</h1>
+                <h1 className="text-3xl font-bold tracking-tight capitalize">{duesLabel} & Payments</h1>
                 <p className="text-slate-500 mt-1">Manage your community contributions.</p>
             </div>
 
@@ -49,9 +53,9 @@ export default async function DuesPage() {
                 <Card className={dbUser.duesPaid ? "border-emerald-200" : "border-red-200"}>
                     <div className={`h-2 w-full absolute top-0 left-0 ${dbUser.duesPaid ? "bg-emerald-500" : "bg-red-500"}`} />
                     <CardHeader className="pt-8">
-                        <CardTitle>Your Dues Status</CardTitle>
+                        <CardTitle>Your {duesLabelCapitalized} Status</CardTitle>
                         <CardDescription>
-                            {community.duesPeriod.charAt(0).toUpperCase() + community.duesPeriod.slice(1)} dues for {community.name}
+                            {community.duesPeriod.charAt(0).toUpperCase() + community.duesPeriod.slice(1)} {duesLabel.toLowerCase()} for {community.name}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -74,7 +78,7 @@ export default async function DuesPage() {
                                     <AlertCircle className="h-6 w-6 text-red-600" />
                                     <div>
                                         <p className="font-semibold text-red-800">Payment Required</p>
-                                        <p className="text-xs text-red-600">Your dues for this period are unpaid.</p>
+                                        <p className="text-xs text-red-600">Your {duesLabel.toLowerCase()} for this period are unpaid.</p>
                                     </div>
                                 </>
                             )}
@@ -90,7 +94,7 @@ export default async function DuesPage() {
                         )}
                         {!dbUser.duesPaid && !duesConfigured && (
                             <p className="text-sm text-amber-600 text-center w-full">
-                                Your admin has not configured the dues amount yet.
+                                Your admin has not configured the {duesLabel.toLowerCase()} amount yet.
                             </p>
                         )}
                     </CardFooter>
@@ -131,8 +135,8 @@ export default async function DuesPage() {
                         <Card className="md:col-span-2 border-slate-300 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 bg-slate-800 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">ADMIN VIEW</div>
                             <CardHeader className="pt-6">
-                                <CardTitle>Configure Community Dues</CardTitle>
-                                <CardDescription>Set the amount and frequency of dues for your community members.</CardDescription>
+                                <CardTitle>Configure Community {duesLabelCapitalized}</CardTitle>
+                                <CardDescription>Set the amount and frequency of {duesLabel.toLowerCase()} for your community members.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form action={updateCommunityDues} className="flex flex-col sm:flex-row gap-4 items-end">
@@ -173,7 +177,7 @@ export default async function DuesPage() {
                         {/* Admin: Member Status List */}
                         <Card className="md:col-span-2">
                             <CardHeader>
-                                <CardTitle>Member Dues Status</CardTitle>
+                                <CardTitle>Member {duesLabelCapitalized} Status</CardTitle>
                                 <CardDescription>Track who has paid and manually override statuses for cash/check payments.</CardDescription>
                             </CardHeader>
                             <CardContent>

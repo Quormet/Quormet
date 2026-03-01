@@ -13,7 +13,7 @@ export default function AssistantActionCard({ type, data }: { type: string; data
             </div>
             <p className="font-semibold text-sm">{data.title}</p>
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{data.body}</p>
-            <Link href="/dashboard">
+            <Link href="/home">
                 <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">View Dashboard →</Button>
             </Link>
         </Card>

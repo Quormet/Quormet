@@ -14,7 +14,7 @@ import { format } from "date-fns";
 export default async function EventsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
@@ -52,7 +52,7 @@ export default async function EventsPage() {
 
                 {dbUser.role === "admin" && (
                     <Button asChild>
-                        <Link href="/events/new"><Plus className="mr-2 h-4 w-4" /> Create Event</Link>
+                        <Link href="/events/new"><Plus className="mr-2 h-4 w-4" /> Plan an Event</Link>
                     </Button>
                 )}
             </div>
@@ -65,7 +65,7 @@ export default async function EventsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-slate-900 mb-1">No upcoming events</h3>
                         <p className="text-slate-500 max-w-sm mx-auto">
-                            When an event is scheduled, you'll see it here along with RSVP options.
+                            {dbUser.role === "admin" ? "Plan an event to bring everyone together." : "When an event is scheduled, you'll see it here along with RSVP options."}
                         </p>
                     </div>
                 ) : (

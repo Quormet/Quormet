@@ -9,6 +9,7 @@ import { Building, KeyRound, Search, Loader2, ArrowRight, Copy, CheckCircle2, Ch
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter } from "next/navigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function OnboardingPage() {
     const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -136,7 +137,7 @@ export default function OnboardingPage() {
                             </div>
                             <h3 className="text-xl font-bold mb-2">Create a Community</h3>
                             <p className="text-slate-500 text-sm mb-6 flex-1">
-                                Set up a new workspace for your HOA or neighborhood. You will be the admin.
+                                Set up a new workspace for your community. You will be the admin.
                             </p>
                             <div className="flex items-center text-blue-600 font-medium text-sm mt-auto">
                                 Continue <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -152,7 +153,7 @@ export default function OnboardingPage() {
                             </div>
                             <h3 className="text-xl font-bold mb-2">Join a Community</h3>
                             <p className="text-slate-500 text-sm mb-6 flex-1">
-                                Connect with your existing neighborhood using an invite code from your admin.
+                                Connect with your existing community using an invite code from your admin.
                             </p>
                             <div className="flex items-center text-emerald-600 font-medium text-sm mt-auto">
                                 Continue <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -191,6 +192,26 @@ export default function OnboardingPage() {
                                                     maxLength={50}
                                                 />
                                                 <p className="text-xs text-slate-500">Must be between 3 and 50 characters.</p>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <label htmlFor="communityType" className="text-sm font-medium text-slate-700">Community Type</label>
+                                                <Select name="communityType" defaultValue="default" required disabled={isLoading}>
+                                                    <SelectTrigger className="h-12 text-lg">
+                                                        <SelectValue placeholder="Select type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="hoa">HOA / Condo Association</SelectItem>
+                                                        <SelectItem value="apartment">Apartment Building</SelectItem>
+                                                        <SelectItem value="sports_club">Sports Club / Team</SelectItem>
+                                                        <SelectItem value="religious">Religious Organization</SelectItem>
+                                                        <SelectItem value="student">Student / Campus Group</SelectItem>
+                                                        <SelectItem value="professional">Professional Association</SelectItem>
+                                                        <SelectItem value="tenant_union">Tenant Union</SelectItem>
+                                                        <SelectItem value="neighborhood">Neighborhood Group</SelectItem>
+                                                        <SelectItem value="coworking">Co-working / Shared Space</SelectItem>
+                                                        <SelectItem value="default">Other</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             <Button type="submit" size="lg" className="w-full text-base h-12" disabled={isLoading}>
                                                 {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
@@ -288,7 +309,7 @@ export default function OnboardingPage() {
                                 </div>
                                 <h2 className="text-2xl font-bold mb-2">Community created successfully!</h2>
                                 <p className="text-slate-500 mb-8 max-w-md">
-                                    You are now the admin. Share the code below with your neighbors so they can join.
+                                    You are now the admin. Share the code below with your members so they can join.
                                 </p>
 
                                 <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl w-full max-w-sm mb-8 relative group">
@@ -307,7 +328,7 @@ export default function OnboardingPage() {
                                     </Button>
                                 </div>
 
-                                <Button size="lg" className="w-full h-14 text-base shadow-lg shadow-blue-200" onClick={() => router.push('/dashboard')}>
+                                <Button size="lg" className="w-full h-14 text-base shadow-lg shadow-blue-200" onClick={() => router.push('/home')}>
                                     Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </CardContent>

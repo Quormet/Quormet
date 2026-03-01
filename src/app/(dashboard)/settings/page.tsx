@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { users, communities } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,11 @@ import { updateCommunitySettings } from "./actions";
 export default async function SettingsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId || dbUser.role !== "admin") {
-        redirect("/dashboard");
+        notFound();
     }
 
     const [community] = await db.select().from(communities).where(eq(communities.id, dbUser.communityId)).limit(1);
@@ -47,7 +47,7 @@ export default async function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Invite Members</CardTitle>
-                    <CardDescription>Share this join code with your neighbors so they can sign up.</CardDescription>
+                    <CardDescription>Share this join code with your members so they can sign up.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-4 max-w-sm">

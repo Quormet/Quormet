@@ -58,7 +58,7 @@ export async function signIn(formData: FormData) {
     }
 
     revalidatePath('/', 'layout')
-    return redirect('/dashboard')
+    return redirect('/home')
 }
 
 export async function signInAsDemo() {
@@ -114,7 +114,7 @@ export async function signInAsDemo() {
         })
 
         revalidatePath('/', 'layout')
-        return redirect('/dashboard')
+        return redirect('/home')
     } catch (error: any) {
         if (error.digest?.startsWith('NEXT_REDIRECT')) throw error
         return { error: error.message || 'Failed to sign in as demo' }

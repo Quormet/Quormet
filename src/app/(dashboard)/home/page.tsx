@@ -4,16 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Megaphone, Vote, Coins, Calendar, ArrowRight, CheckCircle2, Clock, PlusCircle, Users } from "lucide-react"
 import Link from "next/link"
+import PersonalTodos from '@/components/intelligence/PersonalTodos'
+import IntelligencePanel from '@/components/intelligence/IntelligencePanel'
 import { format, formatDistanceToNow } from 'date-fns'
+import { getTerms } from '@/utils/communityTerms'
 
 export default async function DashboardPage() {
     const data = await getDashboardData()
-    const { user, communityName, announcements, polls, events, stats, userVotes, userRsvps } = data
+    const { user, communityName, communityType, announcements, polls, events, stats, userVotes, userRsvps, health } = data
     const isAdmin = user.role === 'admin'
+    const terms = getTerms(communityType)
 
     return (
-        <div className="flex w-full items-start">
-            <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto w-full flex-1">
+        <div className="flex w-full h-full overflow-hidden">
+            <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto w-full flex-1 overflow-y-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Good morning, {user.name.split(' ')[0]} <span className="inline-block animate-wave origin-[70%_70%]">👋</span></h1>
@@ -29,15 +33,40 @@ export default async function DashboardPage() {
                     )}
                 </div>
 
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {isAdmin && health && (
+                    <Card className="bg-white border-slate-200 shadow-sm mb-8">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-semibold flex items-center justify-between">
+                                Community Health Score
+                                <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full ${health.color.replace('text-', 'bg-').replace('-500', '-100')} ${health.color}`}>
+                                    {health.label}
+                                </span>
+                            </CardTitle>
+                            <CardDescription>{health.insight}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center gap-4">
+                                <div className="text-3xl font-bold flex-shrink-0 text-slate-800">{health.score}<span className="text-sm font-normal text-slate-500">/100</span></div>
+                                <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex-1">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${health.score >= 85 ? 'bg-green-500' : health.score >= 65 ? 'bg-blue-500' : health.score >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                        style={{ width: `${Math.min(100, Math.max(0, health.score))}%` }}
+                                    />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <Card className="hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                            <CardTitle className="text-sm font-medium text-slate-500">Neighbors</CardTitle>
+                            <CardTitle className="text-sm font-medium text-slate-500">{terms.members}</CardTitle>
                             <Users className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-slate-800">{stats.memberCount}</div>
-                            <p className="text-xs text-slate-500 mt-1">Total residents</p>
+                            <p className="text-xs text-slate-500 mt-1">Total {terms.members.toLowerCase()}</p>
                         </CardContent>
                     </Card>
 
@@ -65,7 +94,7 @@ export default async function DashboardPage() {
 
                     <Card className="hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                            <CardTitle className="text-sm font-medium text-slate-500">Annual Dues</CardTitle>
+                            <CardTitle className="text-sm font-medium text-slate-500 capitalize">{terms.fees}</CardTitle>
                             <Coins className="h-4 w-4 text-amber-500" />
                         </CardHeader>
                         <CardContent>
@@ -90,6 +119,9 @@ export default async function DashboardPage() {
                 <div className="grid lg:grid-cols-2 gap-8">
                     {/* Left Column */}
                     <div className="space-y-8">
+                        {isAdmin && <IntelligencePanel />}
+                        <PersonalTodos />
+
                         {/* Announcements */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
@@ -97,7 +129,7 @@ export default async function DashboardPage() {
                                 <div className="flex gap-2">
                                     {isAdmin && (
                                         <Button variant="outline" size="sm" className="h-8 shadow-sm" asChild>
-                                            <Link href="/announcements"><PlusCircle className="mr-1 h-3 w-3" /> New</Link>
+                                            <Link href="/announcements"><PlusCircle className="mr-1 h-3 w-3" /> Post Announcement</Link>
                                         </Button>
                                     )}
                                     <Button variant="link" size="sm" asChild>
@@ -142,7 +174,7 @@ export default async function DashboardPage() {
                                 <div className="flex gap-2">
                                     {isAdmin && (
                                         <Button variant="outline" size="sm" className="h-8 shadow-sm" asChild>
-                                            <Link href="/polls"><PlusCircle className="mr-1 h-3 w-3" /> New</Link>
+                                            <Link href="/polls"><PlusCircle className="mr-1 h-3 w-3" /> Start a Poll</Link>
                                         </Button>
                                     )}
                                     <Button variant="link" size="sm" asChild>
@@ -218,7 +250,7 @@ export default async function DashboardPage() {
                                 <div className="flex gap-2">
                                     {isAdmin && (
                                         <Button variant="outline" size="sm" className="h-8 shadow-sm" asChild>
-                                            <Link href="/events"><PlusCircle className="mr-1 h-3 w-3" /> New</Link>
+                                            <Link href="/events"><PlusCircle className="mr-1 h-3 w-3" /> Create Event</Link>
                                         </Button>
                                     )}
                                     <Button variant="link" size="sm" asChild>

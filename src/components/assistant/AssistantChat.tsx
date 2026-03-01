@@ -16,7 +16,7 @@ type Message = {
 const SUGGESTED_PROMPTS = [
     'What are the quiet hours?',
     'Schedule a community event',
-    'Create a poll for neighbors',
+    'Create a poll for members',
     'Who hasn\'t paid dues?',
 ]
 

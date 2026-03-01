@@ -10,6 +10,7 @@ export const communities = pgTable('communities', {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
     joinCode: varchar('join_code', { length: 50 }).notNull().unique(),
+    communityType: varchar('community_type', { length: 50 }).notNull().default('default'),
     duesAmount: integer('dues_amount').notNull().default(0),
     duesPeriod: text('dues_period').notNull().default('monthly'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -27,6 +28,7 @@ export const users = pgTable('users', {
     phone: text('phone'),
     directoryOptIn: boolean('directory_opt_in').notNull().default(false),
     duesPaid: boolean('dues_paid').notNull().default(false),
+    skills: text('skills').array(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -48,6 +50,7 @@ export const announcements = pgTable('announcements', {
     title: text('title').notNull(),
     body: text('body').notNull(),
     imageUrl: text('image_url'),
+    isDraft: boolean('is_draft').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -68,6 +71,7 @@ export const polls = pgTable('polls', {
     question: text('question').notNull(),
     options: json('options').notNull(),
     endsAt: timestamp('ends_at'),
+    announcementPosted: boolean('announcement_posted').default(false),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -254,4 +258,70 @@ export const vendorRatings = pgTable('vendor_ratings', {
     comment: text('comment'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// Notifications table
+export const notifications = pgTable('notifications', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id).notNull(),
+    type: text('type').notNull(), // 'welcome', etc.
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    href: text('href'),
+    isRead: boolean('is_read').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Help Board Requests
+export const helpRequests = pgTable('help_requests', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    communityId: integer('community_id').references(() => communities.id).notNull(),
+    requestedBy: integer('requested_by').references(() => users.id).notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    tags: text('tags').array(),
+    neededBy: timestamp('needed_by'),
+    isResolved: boolean('is_resolved').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Help Board Offers
+export const helpOffers = pgTable('help_offers', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    requestId: uuid('request_id').references(() => helpRequests.id).notNull(),
+    offeredBy: integer('offered_by').references(() => users.id).notNull(),
+    message: text('message'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Relations for new tables
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+    user: one(users, {
+        fields: [notifications.userId],
+        references: [users.id],
+    }),
+}));
+
+export const helpRequestsRelations = relations(helpRequests, ({ one, many }) => ({
+    community: one(communities, {
+        fields: [helpRequests.communityId],
+        references: [communities.id],
+    }),
+    requester: one(users, {
+        fields: [helpRequests.requestedBy],
+        references: [users.id],
+    }),
+    offers: many(helpOffers),
+}));
+
+export const helpOffersRelations = relations(helpOffers, ({ one }) => ({
+    request: one(helpRequests, {
+        fields: [helpOffers.requestId],
+        references: [helpRequests.id],
+    }),
+    offerer: one(users, {
+        fields: [helpOffers.offeredBy],
+        references: [users.id],
+    }),
+}));
+
 

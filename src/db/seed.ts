@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config({ path: ".env" });
 import { db } from "./index";
-import { communities, users, announcements, events, documents, polls, payments, rsvps, votes, vendors, issues, issueUpdates } from "./schema";
+import { communities, users, announcements, events, documents, polls, payments, rsvps, votes, vendors, issues, issueUpdates, helpRequests } from "./schema";
 import { addDays, subDays } from "date-fns";
 import { sql } from "drizzle-orm";
 
@@ -87,7 +87,7 @@ async function main() {
         {
             communityId: community.id,
             name: "Summer BBQ",
-            description: "Grab a burger and meet your neighbors!",
+            description: "Grab a burger and meet your fellow members!",
             startsAt: addDays(new Date(), 14),
             location: "Main Park",
         }
@@ -207,6 +207,34 @@ async function main() {
         { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'vendor_assigned', newStatus: 'in_progress', note: 'Electrician on site today.' },
         { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: null, newStatus: 'submitted', note: 'Issue received.' },
         { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: 'submitted', newStatus: 'resolved', note: 'Wall cleaned and repainted.' },
+    ]);
+
+    // 10. Create Help Requests
+    console.log("Creating help requests...");
+    await db.insert(helpRequests).values([
+        {
+            communityId: community.id,
+            requestedBy: member1.id,
+            title: 'Need help moving furniture',
+            description: 'Looking for 2-3 people to help move a couch upstairs. Will provide pizza!',
+            tags: ['moving', 'furniture'],
+            neededBy: new Date('2026-03-15T14:00:00'),
+        },
+        {
+            communityId: community.id,
+            requestedBy: member2.id,
+            title: 'Anyone have a ladder I can borrow?',
+            description: 'Need a 6ft ladder for a weekend project.',
+            tags: ['tools', 'borrow'],
+        },
+        {
+            communityId: community.id,
+            requestedBy: adminUser.id,
+            title: 'Dog sitter needed March 10-12',
+            description: 'Need someone to watch my golden retriever for a long weekend.',
+            tags: ['dog sitter', 'pets'],
+            neededBy: new Date('2026-03-10T00:00:00'),
+        },
     ]);
 
     console.log("Database seeded successfully!");

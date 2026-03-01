@@ -1,18 +1,20 @@
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { users, announcements } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Megaphone } from "lucide-react";
+import { PlusCircle, Megaphone, FileText } from "lucide-react";
 import { DeleteAnnouncementButton } from "./delete-button";
+import { ApproveAnnouncementButton } from "./approve-button";
+import { cn } from "@/lib/utils";
 
 export default async function AnnouncementsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
@@ -22,13 +24,18 @@ export default async function AnnouncementsPage() {
         id: announcements.id,
         title: announcements.title,
         body: announcements.body,
+        isDraft: announcements.isDraft,
         createdAt: announcements.createdAt,
         authorName: users.name,
     })
         .from(announcements)
         .leftJoin(users, eq(announcements.authorId, users.id))
-        .where(eq(announcements.communityId, dbUser.communityId))
-        .orderBy(desc(announcements.createdAt));
+        .where(
+            dbUser.role === "admin"
+                ? eq(announcements.communityId, dbUser.communityId)
+                : and(eq(announcements.communityId, dbUser.communityId), eq(announcements.isDraft, false))
+        )
+        .orderBy(desc(announcements.isDraft), desc(announcements.createdAt));
 
     return (
         <div className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
@@ -40,7 +47,7 @@ export default async function AnnouncementsPage() {
 
                 {dbUser.role === "admin" && (
                     <Button asChild>
-                        <Link href="/announcements/new"><PlusCircle className="mr-2 h-4 w-4" /> New Announcement</Link>
+                        <Link href="/announcements/new"><PlusCircle className="mr-2 h-4 w-4" /> Post Announcement</Link>
                     </Button>
                 )}
             </div>
@@ -53,24 +60,41 @@ export default async function AnnouncementsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-slate-900 mb-1">No announcements yet</h3>
                         <p className="text-slate-500 max-w-sm mx-auto">
-                            When the community board posts an announcement, it will appear here.
+                            {dbUser.role === "admin" ? "Keep members informed by posting updates here." : "When the community board posts an announcement, it will appear here."}
                         </p>
                     </div>
                 ) : (
                     allAnnouncements.map((ann) => (
-                        <Card key={ann.id} className="overflow-hidden">
-                            <CardHeader className="bg-slate-50/50 border-b pb-4 flex flex-row items-start justify-between">
-                                <div>
-                                    <CardTitle className="text-xl mb-1">{ann.title}</CardTitle>
-                                    <CardDescription className="flex items-center gap-2">
-                                        <span className="font-medium text-slate-700">{ann.authorName}</span>
-                                        <span>•</span>
-                                        <span>{new Date(ann.createdAt).toLocaleDateString()} at {new Date(ann.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </CardDescription>
+                        <Card key={ann.id} className={cn("overflow-hidden", ann.isDraft && "border-amber-200 border-2 bg-amber-50/20")}>
+                            <CardHeader className={cn("bg-slate-50/50 border-b pb-4", ann.isDraft && "bg-amber-100/30 border-amber-200/50")}>
+                                <div className="flex flex-row items-start justify-between">
+                                    <div>
+                                        {ann.isDraft && (
+                                            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">
+                                                <FileText className="h-3.5 w-3.5" />
+                                                Draft — Pending your approval
+                                            </div>
+                                        )}
+                                        <CardTitle className="text-xl mb-1">{ann.title}</CardTitle>
+                                        <CardDescription className="flex items-center gap-2">
+                                            {ann.isDraft ? "Auto-generated by Quormet" : (
+                                                <>
+                                                    <span className="font-medium text-slate-700">{ann.authorName}</span>
+                                                    <span>•</span>
+                                                    <span>{new Date(ann.createdAt).toLocaleDateString()} at {new Date(ann.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </>
+                                            )}
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {dbUser.role === "admin" && ann.isDraft && (
+                                            <ApproveAnnouncementButton id={ann.id} />
+                                        )}
+                                        {dbUser.role === "admin" && (
+                                            <DeleteAnnouncementButton id={ann.id} />
+                                        )}
+                                    </div>
                                 </div>
-                                {dbUser.role === "admin" && (
-                                    <DeleteAnnouncementButton id={ann.id} />
-                                )}
                             </CardHeader>
                             <CardContent className="p-6">
                                 <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">{ann.body}</p>

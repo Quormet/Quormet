@@ -12,7 +12,7 @@ import { ProfileForm } from "./profile-form";
 export default async function DirectoryPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
+    if (!user) redirect("/sign-in");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
@@ -29,13 +29,13 @@ export default async function DirectoryPage() {
 
     // Split into self and others
     const me = directoryMembers.find(m => m.id === dbUser.id)!;
-    const neighbors = directoryMembers.filter(m => m.id !== dbUser.id);
+    const membersList = directoryMembers.filter(m => m.id !== dbUser.id);
 
     return (
         <div className="p-6 md:p-8 space-y-6 max-w-6xl mx-auto w-full">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Member Directory</h1>
-                <p className="text-slate-500 mt-1">Connect with your neighbors and manage your profile.</p>
+                <p className="text-slate-500 mt-1">Connect with your fellow members and manage your profile.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 items-start">
@@ -60,49 +60,49 @@ export default async function DirectoryPage() {
                 <div className="md:col-span-2 space-y-4">
                     <div className="flex items-center gap-2 mb-2">
                         <Users className="h-5 w-5 text-slate-400" />
-                        <h2 className="text-xl font-semibold">Neighbors ({neighbors.length})</h2>
+                        <h2 className="text-xl font-semibold">Members ({membersList.length})</h2>
                         {dbUser.role === "admin" && (
                             <span className="ml-auto text-xs bg-slate-800 text-white px-2 py-1 rounded">Admin: Viewing All</span>
                         )}
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
-                        {neighbors.length === 0 ? (
+                        {membersList.length === 0 ? (
                             <div className="sm:col-span-2 text-center py-12 px-4 bg-white border border-dashed rounded-lg">
-                                <p className="text-slate-500">No other neighbors are listed in the directory yet.</p>
+                                <p className="text-slate-500">No other members are listed in the directory yet.</p>
                                 {dbUser.role === "admin" && (
                                     <p className="text-xs text-slate-400 mt-1">As an admin, you see everyone. Members haven't joined yet.</p>
                                 )}
                             </div>
                         ) : (
-                            neighbors.map(neighbor => (
-                                <Card key={neighbor.id} className="overflow-hidden">
+                            membersList.map(member => (
+                                <Card key={member.id} className="overflow-hidden">
                                     <CardHeader className="p-4 pb-2 bg-slate-50/50 border-b">
                                         <div className="flex justify-between items-start">
-                                            <CardTitle className="text-lg">{neighbor.name}</CardTitle>
-                                            {!neighbor.directoryOptIn && dbUser.role === "admin" && (
+                                            <CardTitle className="text-lg">{member.name}</CardTitle>
+                                            {!member.directoryOptIn && dbUser.role === "admin" && (
                                                 <span title="User is hidden from members"><EyeOff className="h-4 w-4 text-slate-400" /></span>
                                             )}
                                         </div>
-                                        {neighbor.role === "admin" && (
+                                        {member.role === "admin" && (
                                             <span className="inline-block text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mt-1">Admin</span>
                                         )}
                                     </CardHeader>
                                     <CardContent className="p-4 space-y-2 text-sm">
                                         <div className="flex items-center gap-2 text-slate-600">
                                             <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                                            <a href={`mailto:${neighbor.email}`} className="hover:text-blue-600 truncate">{neighbor.email}</a>
+                                            <a href={`mailto:${member.email}`} className="hover:text-blue-600 truncate">{member.email}</a>
                                         </div>
-                                        {neighbor.phone && (
+                                        {member.phone && (
                                             <div className="flex items-center gap-2 text-slate-600">
                                                 <Phone className="h-4 w-4 text-slate-400 shrink-0" />
-                                                <a href={`tel:${neighbor.phone}`} className="hover:text-blue-600">{neighbor.phone}</a>
+                                                <a href={`tel:${member.phone}`} className="hover:text-blue-600">{member.phone}</a>
                                             </div>
                                         )}
-                                        {neighbor.address && (
+                                        {member.address && (
                                             <div className="flex items-center gap-2 text-slate-600">
                                                 <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-                                                <span>{neighbor.address}</span>
+                                                <span>{member.address}</span>
                                             </div>
                                         )}
                                     </CardContent>

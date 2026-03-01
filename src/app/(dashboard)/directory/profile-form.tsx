@@ -64,7 +64,7 @@ export function ProfileForm({ me }: ProfileFormProps) {
                     />
                     <div>
                         <p className="font-medium text-slate-900">Show me in directory</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Allow neighbors to see my name and contact info.</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Allow members to see my name and contact info.</p>
                     </div>
                 </label>
             </div>

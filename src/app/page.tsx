@@ -29,15 +29,15 @@ export default async function LandingPage() {
 
           {user ? (
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/home">Dashboard</Link>
             </Button>
           ) : (
             <>
-              <Link href="/auth/login" className="text-sm font-medium hover:underline underline-offset-4 text-slate-700 hover:text-blue-600 transition-colors">
+              <Link href="/sign-in" className="text-sm font-medium hover:underline underline-offset-4 text-slate-700 hover:text-blue-600 transition-colors">
                 Log in
               </Link>
               <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                <Link href="/auth/signup">Get Started</Link>
+                <Link href="/sign-up">Get Started</Link>
               </Button>
             </>
           )}
@@ -53,12 +53,12 @@ export default async function LandingPage() {
                   Your Community, <span className="text-blue-600">Simplified.</span>
                 </h1>
                 <p className="mx-auto max-w-[700px] text-slate-500 md:text-xl/relaxed lg:text-2xl/relaxed mt-4">
-                  The all-in-one platform for neighborhood associations, HOAs, and community groups to communicate, govern, and operate without the chaos.
+                  The all-in-one platform for communities, HOAs, and member groups to communicate, govern, and operate without the chaos.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                 <Button size="lg" className="h-12 px-8" asChild>
-                  <Link href="/auth/signup">
+                  <Link href="/sign-up">
                     Create your community <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -132,7 +132,7 @@ export default async function LandingPage() {
                     $0
                     <span className="ml-1 text-xl font-medium text-slate-500">/mo</span>
                   </div>
-                  <p className="mt-4 text-slate-500">Perfect for small neighborhoods getting started.</p>
+                  <p className="mt-4 text-slate-500">Perfect for small communities getting started.</p>
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
                   <li className="flex items-center"><CheckCircle2 className="text-green-500 h-5 w-5 mr-3 flex-shrink-0" />Up to 50 residents</li>

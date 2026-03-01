@@ -7,7 +7,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { communities, users, communityMembers } from "@/db/schema";
+import { communities, users, communityMembers, notifications } from "@/db/schema";
 import { eq, ilike, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
@@ -25,12 +25,14 @@ export async function createCommunity(formData: FormData) {
 
     const name = formData.get("name") as string;
     const address = formData.get("address") as string;
+    const communityType = (formData.get("communityType") as string) || "default";
     if (!name || name.length < 3 || name.length > 50) throw new Error("Community name must be between 3 and 50 characters");
 
     const joinCode = generateJoinCode();
     const [newCommunity] = await db.insert(communities).values({
         name,
         joinCode,
+        communityType,
     }).returning();
 
     const primaryEmail = user.email || "no-email@example.com";
@@ -100,13 +102,23 @@ export async function joinCommunity(formData: FormData) {
     }).returning();
 
     // Add to community_members — if already a member, do nothing (don't downgrade role)
-    await db.insert(communityMembers).values({
+    const [member] = await db.insert(communityMembers).values({
         userId: dbUser.id,
         communityId: community.id,
         role: "member",
-    }).onConflictDoNothing();
+    }).onConflictDoNothing().returning();
 
-    redirect("/dashboard");
+    if (member) {
+        await db.insert(notifications).values({
+            userId: dbUser.id,
+            type: 'welcome',
+            title: `Welcome to ${community.name}!`,
+            body: `You're now a member. Check out the community rules in the Document Vault, vote on any open polls, and introduce yourself in the directory.`,
+            href: '/home',
+        });
+    }
+
+    redirect("/home");
 }
 
 export async function searchCommunities(query: string) {
@@ -150,11 +162,21 @@ export async function joinCommunityById(communityId: number) {
     }).returning();
 
     // Add to community_members if not already a member
-    await db.insert(communityMembers).values({
+    const [member] = await db.insert(communityMembers).values({
         userId: dbUser.id,
         communityId: community.id,
         role: "member",
-    }).onConflictDoNothing();
+    }).onConflictDoNothing().returning();
 
-    redirect("/dashboard");
+    if (member) {
+        await db.insert(notifications).values({
+            userId: dbUser.id,
+            type: 'welcome',
+            title: `Welcome to ${community.name}!`,
+            body: `You're now a member. Check out the community rules in the Document Vault, vote on any open polls, and introduce yourself in the directory.`,
+            href: '/home',
+        });
+    }
+
+    redirect("/home");
 }

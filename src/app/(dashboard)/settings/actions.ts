@@ -49,5 +49,5 @@ export async function updateCommunitySettings(formData: FormData) {
         .where(eq(communities.id, user.communityId!));
 
     revalidatePath("/settings");
-    revalidatePath("/dashboard");
+    revalidatePath("/home");
 }

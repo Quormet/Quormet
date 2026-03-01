@@ -7,7 +7,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { users, polls, votes } from "@/db/schema";
+import { users, polls, votes, announcements } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -87,12 +87,49 @@ export async function closePoll(pollId: number) {
     const user = await getAuthUser();
     if (user.role !== "admin") throw new Error("Only admins can close polls");
 
+    const [poll] = await db.select().from(polls).where(and(
+        eq(polls.id, pollId),
+        eq(polls.communityId, user.communityId!)
+    )).limit(1);
+
+    if (!poll) throw new Error("Poll not found");
+
     await db.update(polls)
         .set({ endsAt: new Date() })
-        .where(and(
-            eq(polls.id, pollId),
-            eq(polls.communityId, user.communityId!)
-        ));
+        .where(eq(polls.id, pollId));
+
+    // Auto-draft a results announcement for the admin to review
+    const pollVotes = await db.select().from(votes).where(eq(votes.pollId, pollId));
+
+    // Calculate winner
+    const optionsArray = poll.options as { text: string }[];
+    const voteCounts = new Array(optionsArray.length).fill(0);
+    pollVotes.forEach(v => {
+        if (v.optionIndex >= 0 && v.optionIndex < voteCounts.length) {
+            voteCounts[v.optionIndex]++;
+        }
+    });
+
+    let winningIndex = 0;
+    let maxVotes = 0;
+    for (let i = 0; i < voteCounts.length; i++) {
+        if (voteCounts[i] > maxVotes) {
+            maxVotes = voteCounts[i];
+            winningIndex = i;
+        }
+    }
+
+    const totalVotes = pollVotes.length;
+    const winnerOption = optionsArray[winningIndex]?.text || "Unknown";
+    const percentage = totalVotes > 0 ? Math.round((maxVotes / totalVotes) * 100) : 0;
+
+    await db.insert(announcements).values({
+        communityId: poll.communityId,
+        authorId: user.id,
+        title: `Poll Results: ${poll.question}`,
+        body: `The community has voted. "${winnerOption}" won with ${percentage}% of votes (${maxVotes} of ${totalVotes} members). Thank you to everyone who participated.`,
+        isDraft: true, // admin must approve before it goes live
+    });
 
     revalidatePath("/polls");
 }
