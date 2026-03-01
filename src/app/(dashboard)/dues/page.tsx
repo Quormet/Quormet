@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink } from "lucide-react";
+import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink, BrainCircuit } from "lucide-react";
 import { format } from "date-fns";
 import { createCheckoutSession, updateCommunityDues, markUserPaid } from "./actions";
+import { WolframAnalytics } from "./wolfram-analytics";
 
 export default async function DuesPage() {
     const supabase = await createClient();
@@ -149,6 +150,23 @@ export default async function DuesPage() {
                                     </div>
                                     <Button type="submit" className="w-full sm:w-auto">Save Settings</Button>
                                 </form>
+                            </CardContent>
+                        </Card>
+
+                        {/* Wolfram Award Section */}
+                        <Card className="md:col-span-2 border-purple-200 bg-purple-50/30">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <BrainCircuit className="h-5 w-5 text-purple-600" />
+                                    <CardTitle className="text-purple-900">Wolfram Finance Intelligence</CardTitle>
+                                    <span className="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">WOLFRAM AWARD</span>
+                                </div>
+                                <CardDescription className="text-purple-700">
+                                    Leverage Wolfram Alpha's computational engine to analyze community financial health.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <WolframAnalytics payments={userPayments} communityName={community.name} />
                             </CardContent>
                         </Card>
 
