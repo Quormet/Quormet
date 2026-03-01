@@ -1,0 +1,110 @@
+import { createClient } from "@/utils/supabase/server";
+import { db } from "@/db";
+import { users, communityMembers } from "@/db/schema";
+import { eq, and, not } from "drizzle-orm";
+import { redirect } from "next/navigation";
+
+// client form component
+"use client";
+import { useState } from "react";
+import { sendMessage } from "../actions";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { ArrowLeft, Mail } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+
+function NewMessageForm({ recipients }: { recipients: { id: number; name: string; email: string }[] }) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    async function handleSubmit(formData: FormData) {
+        setIsLoading(true);
+        try {
+            await sendMessage(formData);
+            toast.success("Message sent");
+        } catch (e: any) {
+            toast.error(e.message || "Failed to send message");
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <div className="p-6 md:p-8 max-w-3xl mx-auto w-full">
+            <div className="mb-6">
+                <Button variant="ghost" className="-ml-4 text-slate-500 mb-2" asChild>
+                    <Link href="/messages"><ArrowLeft className="h-4 w-4 mr-2" /> Back to Messages</Link>
+                </Button>
+                <h1 className="text-3xl font-bold tracking-tight">New Message</h1>
+                <p className="text-slate-500 mt-1">Send a direct message to another member.</p>
+            </div>
+
+            <Card>
+                <form action={handleSubmit}>
+                    <CardHeader>
+                        <CardTitle>Compose</CardTitle>
+                        <CardDescription>Choose a recipient and type your message.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <label htmlFor="recipientId" className="text-sm font-medium">Recipient</label>
+                            <select
+                                id="recipientId"
+                                name="recipientId"
+                                className="block w-full rounded-md border border-slate-300 p-2"
+                                required
+                                disabled={isLoading}
+                            >
+                                <option value="">-- select --</option>
+                                {recipients.map(r => (
+                                    <option key={r.id} value={r.id}>{r.name || r.email || `User #${r.id}`}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label htmlFor="body" className="text-sm font-medium">Message</label>
+                            <Textarea
+                                id="body"
+                                name="body"
+                                placeholder="Type your message..."
+                                className="min-h-[150px]"
+                                required
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-end bg-slate-50/50 px-6 py-4 border-t">
+                        <Button type="button" variant="ghost" className="mr-2" asChild disabled={isLoading}>
+                            <Link href="/messages">Cancel</Link>
+                        </Button>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Mail className="mr-2 h-4 w-4 animate-spin" />}
+                            Send
+                        </Button>
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
+    );
+}
+
+export default async function Page() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect("/auth/login");
+
+    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
+    if (!dbUser || !dbUser.communityId) redirect("/onboarding");
+
+    const recipients = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+    })
+    .from(communityMembers)
+    .innerJoin(users, eq(users.id, communityMembers.userId))
+    .where(and(eq(communityMembers.communityId, dbUser.communityId), not(eq(users.id, dbUser.id))));
+
+    return <NewMessageForm recipients={recipients} />;
+}
