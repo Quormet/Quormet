@@ -37,7 +37,7 @@ export default async function LandingPage() {
                 Log in
               </Link>
               <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                <Link href="/sign-up">Get Started</Link>
+                <Link href="/auth/signup">Get Started</Link>
               </Button>
             </>
           )}
@@ -58,7 +58,7 @@ export default async function LandingPage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                 <Button size="lg" className="h-12 px-8" asChild>
-                  <Link href="/sign-up">
+                  <Link href="/auth/signup">
                     Create your community <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

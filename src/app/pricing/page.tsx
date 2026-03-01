@@ -18,7 +18,7 @@ export default function PricingPage() {
                         <Link href="/auth/login">Log in</Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/sign-up">Get Started</Link>
+                        <Link href="/auth/signup">Get Started</Link>
                     </Button>
                 </div>
             </div>
@@ -56,7 +56,7 @@ export default function PricingPage() {
                         <span className="text-slate-500">/mo</span>
                     </div>
                     <Button className="w-full mb-8 bg-slate-900 text-white hover:bg-slate-800" asChild>
-                        <Link href="/sign-up">Start for free (Beta)</Link>
+                        <Link href="/auth/signup">Start for free (Beta)</Link>
                     </Button>
                     <div className="space-y-4 flex-1">
                         <p className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Includes:</p>

@@ -25,6 +25,26 @@ const nextConfig: NextConfig = {
         destination: '/polls',
         permanent: true,
       },
+      {
+        source: '/sign-in',
+        destination: '/auth/login',
+        permanent: true,
+      },
+      {
+        source: '/login',
+        destination: '/auth/login',
+        permanent: true,
+      },
+      {
+        source: '/sign-up',
+        destination: '/auth/signup',
+        permanent: true,
+      },
+      {
+        source: '/signup',
+        destination: '/auth/signup',
+        permanent: true,
+      },
     ];
   },
 };

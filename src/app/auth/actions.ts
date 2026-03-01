@@ -76,7 +76,17 @@ export async function signInWithOAuth(provider: 'google' | 'github') {
     }
 
     if (data.url) {
-        redirect(data.url)
+        // Log to help debug OAuth misrouting if it still hits the wrong domain
+        console.log(`[OAuth] Redirecting to: ${data.url}`);
+
+        // If for some reason the URL is hitting the app's domain instead of Supabase, 
+        // it usually means NEXT_PUBLIC_SUPABASE_URL is misconfigured.
+        if (data.url.includes(process.env.NEXT_PUBLIC_SUPABASE_URL!) || data.url.startsWith('https://')) {
+            redirect(data.url)
+        } else {
+            console.error("[OAuth Error] Invalid authorize URL generated. Check NEXT_PUBLIC_SUPABASE_URL.");
+            return { error: "Authentication configuration error. Please contact support." };
+        }
     }
 }
 
