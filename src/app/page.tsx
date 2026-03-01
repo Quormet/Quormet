@@ -5,29 +5,42 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Building, ShieldCheck, Mail, Megaphone, FileText, Vote, Coins } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-      <header className="px-6 lg:px-14 h-16 flex items-center border-b bg-white">
+      <header className="px-6 lg:px-14 h-16 flex items-center border-b bg-white sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-2">
           <Building className="h-6 w-6 text-blue-600" />
           <span className="font-bold text-xl tracking-tight">Quormet</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4 hidden sm:block">
+          <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4 hidden sm:block text-slate-600 hover:text-slate-900 transition-colors">
             Features
           </Link>
-          <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4 hidden sm:block">
+          <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4 hidden sm:block text-slate-600 hover:text-slate-900 transition-colors">
             Pricing
           </Link>
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-          <Link href="/auth/login" className="text-sm font-medium hover:underline underline-offset-4">
-            Log in
-          </Link>
-          <Button asChild>
-            <Link href="/auth/signup">Get Started</Link>
-          </Button>
+
+          {user ? (
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Link href="/auth/login" className="text-sm font-medium hover:underline underline-offset-4 text-slate-700 hover:text-blue-600 transition-colors">
+                Log in
+              </Link>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/auth/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
         </nav>
       </header>
 
