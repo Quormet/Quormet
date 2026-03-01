@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Megaphone, Trash2 } from "lucide-react";
-import { deleteAnnouncement } from "./actions";
+import { PlusCircle, Megaphone } from "lucide-react";
+import { DeleteAnnouncementButton } from "./delete-button";
 
 export default async function AnnouncementsPage() {
     const supabase = await createClient();
@@ -69,14 +69,7 @@ export default async function AnnouncementsPage() {
                                     </CardDescription>
                                 </div>
                                 {dbUser.role === "admin" && (
-                                    <form action={async () => {
-                                        "use server";
-                                        await deleteAnnouncement(ann.id);
-                                    }}>
-                                        <Button type="submit" variant="ghost" size="icon" className="text-slate-400 hover:text-red-600">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </form>
+                                    <DeleteAnnouncementButton id={ann.id} />
                                 )}
                             </CardHeader>
                             <CardContent className="p-6">

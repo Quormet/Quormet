@@ -1,3 +1,7 @@
+/**
+ * Middleware helper to manage and refresh Supabase sessions, including route protection 
+ * logic that handles both authenticated users and a demo mode login state.
+ */
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -27,7 +31,6 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // Documented way to refresh session
     const {
         data: { user },
     } = await supabase.auth.getUser()
@@ -47,7 +50,6 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 
-    // Redirect logged in users away from auth pages if they try to access them
     if (user && (request.nextUrl.pathname.startsWith('/auth/login') || request.nextUrl.pathname.startsWith('/auth/signup'))) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }

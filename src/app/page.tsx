@@ -1,3 +1,7 @@
+/**
+ * The landing page for Quormet, featuring sections for features, pricing, 
+ * and calls to action for creating or joining a community.
+ */
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Building, ShieldCheck, Mail, Megaphone, FileText, Vote, Coins } from "lucide-react";
@@ -28,7 +32,6 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="w-full py-20 md:py-32 lg:py-48 px-4 md:px-6">
           <div className="container mx-auto max-w-6xl">
             <div className="flex flex-col items-center text-center space-y-8">
@@ -57,7 +60,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features Section */}
         <section id="features" className="w-full py-16 md:py-24 bg-white border-y">
           <div className="container mx-auto px-4 md:px-6 max-w-6xl">
             <div className="text-center space-y-4 mb-16">
@@ -100,7 +102,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Pricing Section */}
         <section id="pricing" className="w-full py-16 md:py-24">
           <div className="container mx-auto px-4 md:px-6 max-w-5xl">
             <div className="text-center space-y-4 mb-16">

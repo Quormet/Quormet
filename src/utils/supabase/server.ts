@@ -1,3 +1,7 @@
+/**
+ * Provides a Supabase client for use in Server Components and API routes, with support 
+ * for cookie-based session persistence and a demo mode that mocks the authentication layer.
+ */
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -18,16 +22,12 @@ export async function createClient() {
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
                     }
                 },
             },
         }
     )
 
-    // Proxy the auth object to inject a mock user if demo mode is active
     const isDemoMode = cookieStore.get('quormet_demo_mode')?.value === 'true';
     if (isDemoMode) {
         const demoUser = {

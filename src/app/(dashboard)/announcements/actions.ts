@@ -1,3 +1,7 @@
+/**
+ * Provides server actions for community announcements, allowing administrators 
+ * to create and delete posts while ensuring community-level access control.
+ */
 "use server";
 
 import { createClient } from "@/utils/supabase/server";

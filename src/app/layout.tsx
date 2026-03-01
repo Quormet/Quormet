@@ -1,3 +1,7 @@
+/**
+ * The root layout of the application, defining the global font, metadata, and 
+ * rendering the Toaster component for notification support.
+ */
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';

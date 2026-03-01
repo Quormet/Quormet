@@ -1,3 +1,7 @@
+/**
+ * Provides the dashboard's layout, including side navigation with links to key 
+ * community management features, user profile information, and authentication checks.
+ */
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
@@ -15,12 +19,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
     if (!user) redirect("/auth/login");
 
-    //this is the database thing
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) {
         redirect("/onboarding");
     }
-
 
     const [community] = await db.select().from(communities).where(eq(communities.id, dbUser.communityId)).limit(1);
 
@@ -79,8 +81,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
                     </form>
                 </div>
             </aside>
-
-            {/* Mobile Nav Top Bar omitted for brevity but should be added later */}
 
             <main className="flex-1 flex flex-col min-h-0 overflow-auto">
                 {children}

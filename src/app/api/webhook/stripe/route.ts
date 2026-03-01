@@ -1,3 +1,7 @@
+/**
+ * Handles incoming Stripe webhook events, specifically the 'checkout.session.completed' 
+ * event to record user payments and update their dues status in the database.
+ */
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
@@ -39,7 +43,6 @@ export async function POST(req: Request) {
                 const userId = parseInt(userIdStr);
                 const communityId = parseInt(communityIdStr);
 
-                // Record payment
                 await db.insert(payments).values({
                     userId,
                     communityId,
@@ -47,7 +50,6 @@ export async function POST(req: Request) {
                     stripeSessionId: session.id,
                 });
 
-                // Mark user as paid
                 await db.update(users).set({ duesPaid: true }).where(eq(users.id, userId));
             }
         }

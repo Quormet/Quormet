@@ -1,3 +1,8 @@
+/**
+ * Defines server actions for community polls, enabling admins to create new 
+ * polls and members to submit votes while enforcing constraints such as 
+ * poll deadlines and single-vote policies.
+ */
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
@@ -28,7 +33,6 @@ export async function createPoll(formData: FormData) {
 
     if (!question || !optionsStr) throw new Error("Question and options are required");
 
-    // Options are comma-separated
     const options = optionsStr.split(',').map(o => o.trim()).filter(Boolean);
     if (options.length < 2) throw new Error("At least 2 options are required");
 
@@ -52,18 +56,15 @@ export async function createPoll(formData: FormData) {
 export async function submitVote(pollId: number, optionIndex: number) {
     const user = await getAuthUser();
 
-    // Check if poll exists and belongs to community
     const [poll] = await db.select().from(polls).where(eq(polls.id, pollId)).limit(1);
     if (!poll || poll.communityId !== user.communityId) {
         throw new Error("Invalid poll");
     }
 
-    // Check if poll is closed
     if (poll.endsAt && new Date(poll.endsAt) < new Date()) {
         throw new Error("This poll is closed");
     }
 
-    // Ensure one vote per member
     const [existingVote] = await db.select()
         .from(votes)
         .where(and(eq(votes.pollId, pollId), eq(votes.userId, user.id)))

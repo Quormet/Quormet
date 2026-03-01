@@ -1,3 +1,7 @@
+/**
+ * Defines server actions for user authentication, including standard sign-up, sign-in, 
+ * OAuth-based sign-in, sign-out, and a demo mode login.
+ */
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
@@ -6,6 +10,7 @@ import { headers, cookies } from 'next/headers'
 import { db } from '@/db'
 import { communities, users } from '@/db/schema'
 import { eq } from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
 
 export async function signUp(formData: FormData) {
     const supabase = await createClient()
@@ -56,8 +61,6 @@ export async function signIn(formData: FormData) {
     return redirect('/dashboard')
 }
 
-import { revalidatePath } from 'next/cache'
-
 export async function signInWithOAuth(provider: 'google' | 'github') {
     const supabase = await createClient()
 
@@ -81,7 +84,6 @@ export async function signOut() {
     const supabase = await createClient()
     await supabase.auth.signOut()
 
-    // Clear demo mode cookie
     const cookieStore = await cookies()
     cookieStore.delete('quormet_demo_mode')
 
@@ -101,7 +103,6 @@ export async function signInAsDemo() {
     const demoUserId = 'demo-user-id'
     const demoEmail = 'demo@example.com'
 
-    // Ensure demo community exists
     let demoCommunity = (await db.select().from(communities).where(eq(communities.name, 'Demo Community')).limit(1))[0]
     if (!demoCommunity) {
         demoCommunity = (await db.insert(communities).values({
@@ -110,7 +111,6 @@ export async function signInAsDemo() {
         }).returning())[0]
     }
 
-    // Upsert user into our DB
     await db.insert(users).values({
         supabaseId: demoUserId,
         name: 'Demo User',

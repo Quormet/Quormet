@@ -1,3 +1,8 @@
+/**
+ * Defines server actions for event management, including creating new events 
+ * (restricted to admins) and submitting user RSVPs with appropriate 
+ * community-level validation.
+ */
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
@@ -44,13 +49,11 @@ export async function createEvent(formData: FormData) {
 export async function submitRsvp(eventId: number, response: "yes" | "no") {
     const user = await getAuthUser();
 
-    // Validate event exists and belongs to community
     const [event] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
     if (!event || event.communityId !== user.communityId) {
         throw new Error("Invalid event");
     }
 
-    // Insert or update RSVP
     const [existing] = await db.select()
         .from(rsvps)
         .where(and(eq(rsvps.eventId, eventId), eq(rsvps.userId, user.id)))

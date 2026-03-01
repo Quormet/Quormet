@@ -1,3 +1,8 @@
+/**
+ * Defines the database schema using Drizzle ORM, including tables for communities, users, 
+ * announcements, polls, votes, documents, events, RSVPs, and payments, along with their 
+ * relational mappings.
+ */
 import { pgTable, serial, text, timestamp, boolean, integer, json, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -5,8 +10,8 @@ export const communities = pgTable('communities', {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
     joinCode: varchar('join_code', { length: 50 }).notNull().unique(),
-    duesAmount: integer('dues_amount').notNull().default(0), // stored in cents
-    duesPeriod: text('dues_period').notNull().default('monthly'), // 'monthly' or 'annual'
+    duesAmount: integer('dues_amount').notNull().default(0), 
+    duesPeriod: text('dues_period').notNull().default('monthly'), 
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -14,7 +19,7 @@ export const users = pgTable('users', {
     id: serial('id').primaryKey(),
     supabaseId: text('supabase_id').notNull().unique(),
     communityId: integer('community_id').references(() => communities.id),
-    role: text('role').notNull().default('member'), // 'admin' or 'member'
+    role: text('role').notNull().default('member'), 
     name: text('name').notNull(),
     email: text('email').notNull(),
     address: text('address'),
@@ -39,7 +44,7 @@ export const polls = pgTable('polls', {
     communityId: integer('community_id').notNull().references(() => communities.id),
     authorId: integer('author_id').notNull().references(() => users.id),
     question: text('question').notNull(),
-    options: json('options').notNull(), // string[]
+    options: json('options').notNull(), 
     endsAt: timestamp('ends_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -76,7 +81,7 @@ export const rsvps = pgTable('rsvps', {
     id: serial('id').primaryKey(),
     eventId: integer('event_id').notNull().references(() => events.id),
     userId: integer('user_id').notNull().references(() => users.id),
-    response: text('response').notNull(), // 'yes', 'no', 'maybe'
+    response: text('response').notNull(), 
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -84,12 +89,11 @@ export const payments = pgTable('payments', {
     id: serial('id').primaryKey(),
     userId: integer('user_id').notNull().references(() => users.id),
     communityId: integer('community_id').notNull().references(() => communities.id),
-    amount: integer('amount').notNull(), // stored in cents
+    amount: integer('amount').notNull(), 
     stripeSessionId: text('stripe_session_id'),
     paidAt: timestamp('paid_at').defaultNow().notNull(),
 });
 
-// Relationships
 export const communitiesRelations = relations(communities, ({ many }) => ({
     users: many(users),
     announcements: many(announcements),
