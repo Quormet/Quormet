@@ -84,7 +84,7 @@ export function SidebarNav({
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Community</p>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button disabled={isPending} className="w-full flex items-center justify-between gap-2 text-left font-medium text-slate-900 hover:text-blue-700 transition-colors">
+                        <button suppressHydrationWarning disabled={isPending} className="w-full flex items-center justify-between gap-2 text-left font-medium text-slate-900 hover:text-blue-700 transition-colors">
                             <span className="truncate">{communityName || "Community"}</span>
                             <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
                         </button>
@@ -168,7 +168,7 @@ export function SidebarNav({
 
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="-mr-2">
+                        <Button suppressHydrationWarning variant="ghost" size="icon" className="-mr-2">
                             <Menu className="h-5 w-5" />
                         </Button>
                     </SheetTrigger>
