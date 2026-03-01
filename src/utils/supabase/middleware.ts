@@ -1,6 +1,6 @@
 /**
  * Middleware helper to manage and refresh Supabase sessions, including route protection 
- * logic that handles both authenticated users and a demo mode login state.
+ * logic that handles authenticated users.
  */
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -50,9 +50,7 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/settings') ||
         request.nextUrl.pathname.startsWith('/documents');
 
-    const isDemoMode = request.cookies.get('quormet_demo_mode')?.value === 'true';
-
-    if (!user && !isDemoMode && isProtectedRoute) {
+    if (!user && isProtectedRoute) {
         return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 

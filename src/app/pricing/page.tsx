@@ -29,7 +29,7 @@ export default function PricingPage() {
                     Pricing that scales with your community.
                 </h1>
                 <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-                    Start for free and upgrade as your neighborhood grows.
+                    Start for free and upgrade as your community grows.
                     <br />
                     <span className="font-medium text-blue-600 block mt-2 px-4 py-2 bg-blue-50 rounded-lg inline-block text-sm">Note: All premium tiers are illustrative for future implementation. Quormet is currently in free beta.</span>
                 </p>
@@ -74,7 +74,7 @@ export default function PricingPage() {
                     <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">MOST POPULAR</div>
                     <div className="mb-4">
                         <h3 className="text-xl font-bold text-white">Community</h3>
-                        <p className="text-sm text-slate-300 mt-2 min-h-[40px]">For active neighborhoods needing more tools.</p>
+                        <p className="text-sm text-slate-300 mt-2 min-h-[40px]">For active communities needing more tools.</p>
                     </div>
                     <div className="mb-6">
                         <span className="text-4xl font-extrabold text-white">$20</span>

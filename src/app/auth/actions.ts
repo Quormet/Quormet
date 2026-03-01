@@ -61,62 +61,6 @@ export async function signIn(formData: FormData) {
     return redirect('/dashboard')
 }
 
-export async function signInAsDemo() {
-    const cookieStore = await cookies()
-    cookieStore.set('quormet_demo_mode', 'true', {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24, // 24 hours
-    })
-
-    const demoUserId = 'demo-user-id'
-    const demoEmail = 'demo@example.com'
-
-    try {
-        let demoCommunity = (await db.select().from(communities).where(eq(communities.name, 'Demo Community')).limit(1))[0]
-
-        if (!demoCommunity) {
-            try {
-                const [created] = await db.insert(communities).values({
-                    name: 'Demo Community',
-                    joinCode: 'DEMO12',
-                }).returning()
-                demoCommunity = created
-            } catch (insertError) {
-                console.error('Failed to create Demo Community:', insertError)
-                // Fallback: try to just get the first community available if name based lookup fails
-                const [fallback] = await db.select().from(communities).limit(1)
-                if (fallback) {
-                    demoCommunity = fallback
-                } else {
-                    return { error: 'Could not find or create a demo community. Please run npx npm run seed first.' }
-                }
-            }
-        }
-
-        await db.insert(users).values({
-            supabaseId: demoUserId,
-            name: 'Demo User',
-            email: demoEmail,
-            role: 'admin',
-            communityId: demoCommunity.id,
-        }).onConflictDoUpdate({
-            target: users.supabaseId,
-            set: {
-                communityId: demoCommunity.id,
-                role: 'admin',
-            }
-        })
-
-        revalidatePath('/', 'layout')
-        return redirect('/dashboard')
-    } catch (error: any) {
-        if (error.digest?.startsWith('NEXT_REDIRECT')) throw error
-        return { error: error.message || 'Failed to sign in as demo' }
-    }
-}
-
 export async function signInWithOAuth(provider: 'google' | 'github') {
     const supabase = await createClient()
 

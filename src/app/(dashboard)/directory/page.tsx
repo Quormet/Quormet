@@ -54,7 +54,7 @@ export default async function DirectoryPage() {
                     </CardContent>
                 </Card>
 
-                {/* Neighbors List */}
+                {/* Members List */}
                 <div className="md:col-span-2 space-y-4">
                     <div className="flex items-center gap-2 mb-2">
                         <Users className="h-5 w-5 text-slate-400" />

@@ -67,7 +67,7 @@ export default async function LandingPage() {
                 </Button>
               </div>
               <div className="pt-8 text-sm text-slate-500 font-medium tracking-wide">
-                TRUSTED BY NEIGHBORHOODS EVERYWHERE
+                TRUSTED BY COMMUNITIES EVERYWHERE
               </div>
             </div>
           </div>

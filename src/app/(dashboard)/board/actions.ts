@@ -65,7 +65,7 @@ export async function resolveRequest(requestId: string) {
     revalidatePath('/help')
 }
 
-export async function getMatchingNeighbors(tags: string[]) {
+export async function getMatchingMembers(tags: string[]) {
     const user = await getCurrentUser()
     if (!user) throw new Error('Unauthorized')
 

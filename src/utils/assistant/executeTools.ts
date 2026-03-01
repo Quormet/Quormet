@@ -15,7 +15,12 @@ export async function executeTool(
                 const relevant = docs.filter((d: any) =>
                     d.name.toLowerCase().includes(q) ||
                     d.category?.toLowerCase().includes(q)
-                );
+                ).map(d => ({
+                    name: d.name,
+                    category: d.category,
+                    link: `/documents`, // Direct to doc vault for now
+                    instruction: `The document "${d.name}" (${d.category}) is available in the Document Vault.`
+                }));
                 return { success: true, type: 'documents', data: relevant };
             }
 

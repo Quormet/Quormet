@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter } from "next/navigation";
 
-export default function ExploreCommunitiesPage() {
+export default function CommunitiesPage() {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [path, setPath] = useState<'create' | 'join' | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -110,7 +110,7 @@ export default function ExploreCommunitiesPage() {
                 </div>
 
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4 transition-all duration-300">
-                    {step === 1 && "Join Another Community"}
+                    {step === 1 && "Join or Create Community"}
                     {step === 2 && path === 'create' && "Create your community"}
                     {step === 2 && path === 'join' && "Join your community"}
                     {step === 3 && "You're all set!"}

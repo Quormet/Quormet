@@ -1,5 +1,5 @@
 /**
- * Clean seed script — Maplewood HOA demo data
+ * Clean seed script — Maplewood HOA
  * Run with: npx tsx scripts/seed.ts
  */
 import 'dotenv/config';
@@ -12,9 +12,9 @@ const client = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false });
 const db = drizzle(client, { schema });
 
 async function main() {
-    console.log('🌱 Seeding Maplewood HOA demo data...');
+    console.log('🌱 Seeding Maplewood HOA data...');
 
-    // Clear existing demo data (be careful in prod!)
+    // Clear existing data (be careful in prod!)
     await db.delete(schema.payments);
     await db.delete(schema.rsvps);
     await db.delete(schema.votes);
@@ -120,7 +120,7 @@ async function main() {
         },
     ]).returning();
 
-    // Add votes on active poll (6 votes, but not from the demo user sarah)
+    // Add votes on active poll (6 votes, but not from sarah)
     await db.insert(schema.votes).values([
         { pollId: activePoll.id, userId: mike.id, optionIndex: 0 },
         { pollId: activePoll.id, userId: tom.id, optionIndex: 1 },
@@ -241,7 +241,7 @@ async function main() {
     ]);
     console.log('✅ Payments created');
 
-    console.log('\n🎉 Seed complete! Demo credentials:');
+    console.log('\n🎉 Seed complete! Initial credentials:');
     console.log('   Admin:   sarah@maplewood.com (supabaseId: seed-admin-001)');
     console.log('   Members: mike, tom, anna, james @maplewood.com');
     console.log('   Join code: MAPLE1');

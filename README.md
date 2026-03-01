@@ -130,7 +130,7 @@ npm install
 # Push the database schema
 npx drizzle-kit push
 
-# Seed demo data
+# Seed initial data
 npx tsx scripts/seed.ts
 
 # Run the dev server
@@ -138,17 +138,6 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
-
-### Demo Account
-
-After seeding, use these credentials to explore the app:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | sarah@maplewood.com | password123 |
-| Member | mike@maplewood.com | password123 |
-
-Community join code: **MAPLE1**
 
 ---
 

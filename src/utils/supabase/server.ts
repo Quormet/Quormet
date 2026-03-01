@@ -1,6 +1,6 @@
 /**
  * Provides a Supabase client for use in Server Components and API routes, with support 
- * for cookie-based session persistence and a demo mode that mocks the authentication layer.
+ * for cookie-based session persistence.
  */
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'

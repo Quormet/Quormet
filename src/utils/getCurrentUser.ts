@@ -7,19 +7,6 @@ import { cookies } from 'next/headers'
 export async function getCurrentUser() {
     const supabase = await createClient()
     let { data: { user } } = await supabase.auth.getUser()
-    const cookieStore = await cookies()
-    const isDemoMode = cookieStore.get('quormet_demo_mode')?.value === 'true'
-
-    if (!user && isDemoMode) {
-        user = {
-            id: 'demo-user-id',
-            email: 'demo@example.com',
-            user_metadata: { full_name: 'Demo User' },
-            app_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-        } as any
-    }
 
     if (!user) return null
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signUp, signInWithOAuth, signInAsDemo } from '@/app/auth/actions'
+import { signUp, signInWithOAuth } from '@/app/auth/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
@@ -50,15 +50,6 @@ export default function SignupPage() {
             setIsLoading(false)
         } else if (result?.success) {
             toast.success(result.message)
-            setIsLoading(false)
-        }
-    }
-
-    async function handleDemoLogin() {
-        setIsLoading(true)
-        const result = await signInAsDemo()
-        if (result?.error) {
-            toast.error(result.error)
             setIsLoading(false)
         }
     }
@@ -142,17 +133,6 @@ export default function SignupPage() {
                             Continue with Github
                         </Button>
                     </div>
-
-                    <Button
-                        variant="ghost"
-                        className="w-full text-slate-500 font-normal"
-                        onClick={handleDemoLogin}
-                        disabled={isLoading}
-                    >
-                        Try Demo Account
-                    </Button>
-
-
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
                     <div className="text-sm text-center text-slate-500">

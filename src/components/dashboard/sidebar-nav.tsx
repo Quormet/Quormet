@@ -12,12 +12,12 @@ import { setActiveCommunity } from "@/utils/setCommunity";
 import { getTerms } from "@/utils/communityTerms";
 
 const allNavItems = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/home", icon: LayoutDashboard },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "Voting & Polls", href: "/polls", icon: Vote },
     { name: "Dues & Payments", href: "/payments", icon: Coins },
     { name: "Document Vault", href: "/documents", icon: FileText },
-    { name: "Events", href: "/events", icon: Calendar },
+    { name: "Community Events", href: "/events", icon: Calendar },
     { name: "Directory", href: "/directory", icon: Users },
     { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Issues", href: "/issues", icon: ClipboardList },
