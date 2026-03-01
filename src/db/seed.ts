@@ -3,21 +3,14 @@ config({ path: ".env" });
 import { db } from "./index";
 import { communities, users, announcements, events, documents, polls, payments, rsvps, votes } from "./schema";
 import { addDays, subDays } from "date-fns";
+import { sql } from "drizzle-orm";
 
 async function main() {
     console.log("Seeding database...");
 
     // Clear existing data
     console.log("Clearing existing data...");
-    await db.delete(votes);
-    await db.delete(rsvps);
-    await db.delete(payments);
-    await db.delete(polls);
-    await db.delete(documents);
-    await db.delete(events);
-    await db.delete(announcements);
-    await db.delete(users);
-    await db.delete(communities);
+    await db.execute("TRUNCATE TABLE communities CASCADE;");
 
     // 1. Create a Community
     console.log("Creating community...");
