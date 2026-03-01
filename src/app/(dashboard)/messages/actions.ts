@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { users, communityMembers, messages } from "@/db/schema";
-import { eq, and, or, sql, lt } from "drizzle-orm";
+import { eq, and, or, sql, lt, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -31,16 +31,16 @@ async function getAuthUser() {
 }
 
 /**
- * send a message addressed to one member of the community
+ * Send a message to a community member. Redirects to the thread on success.
  */
 export async function sendMessage(formData: FormData) {
     const user = await getAuthUser();
 
     const recipientId = parseInt(formData.get("recipientId") as string);
-    const body = formData.get("body") as string;
+    const body = (formData.get("body") as string)?.trim();
     if (!recipientId || !body) throw new Error("Recipient and message body required");
 
-    // verify recipient is same community
+    // Verify recipient is in the same community
     const [recipientMember] = await db.select()
         .from(communityMembers)
         .where(and(
@@ -49,9 +49,7 @@ export async function sendMessage(formData: FormData) {
         ))
         .limit(1);
 
-    if (!recipientMember) {
-        throw new Error("Recipient not part of your community");
-    }
+    if (!recipientMember) throw new Error("Recipient not part of your community");
 
     await db.insert(messages).values({
         communityId: user.communityId!,
@@ -60,29 +58,122 @@ export async function sendMessage(formData: FormData) {
         body,
     });
 
-    revalidatePath("/messages");
-    redirect("/messages");
+    revalidatePath(`/messages/${recipientId}`);
+    redirect(`/messages/${recipientId}`);
 }
 
 /**
- * delete a specific message (sender or recipient may delete)
+ * Delete a specific message. Only sender or recipient may delete.
+ * Redirects back to the thread after deletion.
  */
-export async function deleteMessage(id: number) {
+export async function deleteMessage(id: number, partnerId: number) {
     const user = await getAuthUser();
     await db.delete(messages)
         .where(and(
             eq(messages.id, id),
             or(eq(messages.senderId, user.id), eq(messages.recipientId, user.id))
         ));
-    revalidatePath("/messages");
-    redirect("/messages");
+    revalidatePath(`/messages/${partnerId}`);
+    redirect(`/messages/${partnerId}`);
 }
 
 /**
- * cleanup old messages older than retention window; called during listing
+ * Returns a list of distinct conversation partners for the current user,
+ * with the most recent message and timestamp for preview.
+ */
+export async function getConversations() {
+    const user = await getAuthUser();
+
+    // Get all messages involving the current user, ordered by most recent
+    const allMessages = await db.select({
+        id: messages.id,
+        senderId: messages.senderId,
+        recipientId: messages.recipientId,
+        body: messages.body,
+        createdAt: messages.createdAt,
+    })
+        .from(messages)
+        .where(and(
+            eq(messages.communityId, user.communityId!),
+            or(eq(messages.senderId, user.id), eq(messages.recipientId, user.id))
+        ))
+        .orderBy(desc(messages.createdAt));
+
+    // Build map: partnerId → { lastMessage, lastAt }
+    const convMap = new Map<number, { lastBody: string; lastAt: Date }>();
+    for (const m of allMessages) {
+        const partnerId = m.senderId === user.id ? m.recipientId : m.senderId;
+        if (!convMap.has(partnerId)) {
+            convMap.set(partnerId, { lastBody: m.body, lastAt: new Date(m.createdAt) });
+        }
+    }
+
+    if (convMap.size === 0) return { conversations: [], currentUserId: user.id };
+
+    // Fetch partner user details
+    const partnerIds = Array.from(convMap.keys());
+    const partners = await db.select({ id: users.id, name: users.name, email: users.email })
+        .from(users)
+        .where(sql`${users.id} = ANY(ARRAY[${sql.join(partnerIds.map(id => sql`${id}`), sql`, `)}]::int[])`);
+
+    const conversations = partners.map(p => ({
+        ...p,
+        lastBody: convMap.get(p.id)!.lastBody,
+        lastAt: convMap.get(p.id)!.lastAt,
+    })).sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
+
+    return { conversations, currentUserId: user.id };
+}
+
+/**
+ * Returns all messages in the thread between the current user and a partner.
+ */
+export async function getThread(partnerId: number) {
+    const user = await getAuthUser();
+
+    const thread = await db.select({
+        id: messages.id,
+        senderId: messages.senderId,
+        body: messages.body,
+        createdAt: messages.createdAt,
+    })
+        .from(messages)
+        .where(and(
+            eq(messages.communityId, user.communityId!),
+            or(
+                and(eq(messages.senderId, user.id), eq(messages.recipientId, partnerId)),
+                and(eq(messages.senderId, partnerId), eq(messages.recipientId, user.id))
+            )
+        ))
+        .orderBy(messages.createdAt);
+
+    const [partner] = await db.select({ id: users.id, name: users.name, email: users.email })
+        .from(users).where(eq(users.id, partnerId));
+
+    return { thread, currentUserId: user.id, partner };
+}
+
+/**
+ * Returns all community members except the current user, for starting a new chat.
+ */
+export async function getCommunityMembers() {
+    const user = await getAuthUser();
+
+    const members = await db.select({ id: users.id, name: users.name, email: users.email })
+        .from(communityMembers)
+        .innerJoin(users, eq(users.id, communityMembers.userId))
+        .where(and(
+            eq(communityMembers.communityId, user.communityId!),
+            sql`${users.id} != ${user.id}`
+        ));
+
+    return members;
+}
+
+/**
+ * Cleanup old messages older than 30 days.
  */
 export async function purgeOldMessages() {
-    // compute threshold date in JavaScript to avoid raw SQL
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - MESSAGE_RETENTION_DAYS);
     await db.delete(messages).where(lt(messages.createdAt, cutoff));

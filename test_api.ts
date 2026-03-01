@@ -17,7 +17,7 @@ async function run() {
         });
         console.log("SUCCESS");
     } catch (e) {
-        console.log("ERROR:", e.message);
+        console.log("ERROR:", (e as Error).message);
     }
 }
 run();

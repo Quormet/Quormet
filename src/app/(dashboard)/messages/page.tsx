@@ -1,13 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { users, messages, communityMembers } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { getConversations, purgeOldMessages } from "./actions";
+import NewChatButton from "./new-chat-button";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
-import { purgeOldMessages } from "./actions";
+import { MessageSquare } from "lucide-react";
 
 export default async function MessagesPage() {
     const supabase = await createClient();
@@ -17,103 +16,66 @@ export default async function MessagesPage() {
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser) redirect("/onboarding");
 
-    // Resolve active community from cookie
-    const cookieStore = await cookies();
-    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
-    const communityId = activeCookieVal ? parseInt(activeCookieVal) : dbUser.communityId;
-    if (!communityId) redirect("/onboarding");
-
-    // remove old messages first
     await purgeOldMessages();
+    const { conversations } = await getConversations();
 
-    const inbox = await db.select({
-        id: messages.id,
-        body: messages.body,
-        senderId: messages.senderId,
-        senderName: users.name,
-        createdAt: messages.createdAt,
-    })
-        .from(messages)
-        .leftJoin(users, eq(users.id, messages.senderId))
-        .where(and(eq(messages.recipientId, dbUser.id), eq(messages.communityId, communityId)))
-        .orderBy(desc(messages.createdAt));
-
-    const sent = await db.select({
-        id: messages.id,
-        body: messages.body,
-        recipientId: messages.recipientId,
-        recipientName: users.name,
-        createdAt: messages.createdAt,
-    })
-        .from(messages)
-        .leftJoin(users, eq(users.id, messages.recipientId))
-        .where(and(eq(messages.senderId, dbUser.id), eq(messages.communityId, communityId)))
-        .orderBy(desc(messages.createdAt));
+    function timeLabel(date: Date) {
+        const now = new Date();
+        const diff = now.getTime() - new Date(date).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "Just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        return new Date(date).toLocaleDateString([], { month: "short", day: "numeric" });
+    }
 
     return (
-        <div className="p-6 md:p-8 max-w-4xl mx-auto w-full space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-                <Button asChild size="sm">
-                    <Link href="/messages/new">
-                        <Mail className="mr-2 h-4 w-4" /> New Message
-                    </Link>
-                </Button>
+        <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b bg-white">
+                <h1 className="text-xl font-bold tracking-tight">Messages</h1>
+                <NewChatButton />
             </div>
 
-            <section>
-                <h2 className="text-2xl font-semibold mb-2">Inbox</h2>
-                {inbox.length === 0 ? (
-                    <p className="text-slate-500">You have no messages.</p>
-                ) : (
-                    <div className="space-y-2">
-                        {inbox.map((m) => (
-                            <Link
-                                key={m.id}
-                                href={`/messages/${m.id}`}
-                                className="block p-4 rounded-lg border hover:bg-slate-50 transition-colors"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span className="font-medium">{m.senderName || "(unknown)"}</span>
-                                    <span className="text-xs text-slate-400">
-                                        {new Date(m.createdAt).toLocaleString()}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-slate-700 truncate mt-1">
-                                    {m.body}
-                                </p>
-                            </Link>
-                        ))}
+            {/* Conversation list */}
+            <div className="flex-1 overflow-y-auto">
+                {conversations.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3 p-8">
+                        <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+                            <MessageSquare className="h-7 w-7 text-slate-400" />
+                        </div>
+                        <div className="text-center">
+                            <p className="font-medium text-slate-600">No messages yet</p>
+                            <p className="text-sm mt-1">Click the pencil icon above to start a conversation.</p>
+                        </div>
                     </div>
-                )}
-            </section>
-
-            <section>
-                <h2 className="text-2xl font-semibold mb-2">Sent</h2>
-                {sent.length === 0 ? (
-                    <p className="text-slate-500">You haven't sent any messages yet.</p>
                 ) : (
-                    <div className="space-y-2">
-                        {sent.map((m) => (
-                            <Link
-                                key={m.id}
-                                href={`/messages/${m.id}`}
-                                className="block p-4 rounded-lg border hover:bg-slate-50 transition-colors"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span className="font-medium">To {m.recipientName || "(unknown)"}</span>
-                                    <span className="text-xs text-slate-400">
-                                        {new Date(m.createdAt).toLocaleString()}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-slate-700 truncate mt-1">
-                                    {m.body}
-                                </p>
-                            </Link>
+                    <ul className="divide-y">
+                        {conversations.map((c) => (
+                            <li key={c.id}>
+                                <Link
+                                    href={`/messages/${c.id}`}
+                                    className="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors"
+                                >
+                                    {/* Avatar */}
+                                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                                        {(c.name || c.email || "?")[0].toUpperCase()}
+                                    </div>
+                                    {/* Details */}
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="font-semibold text-sm truncate">{c.name || c.email}</p>
+                                            <span className="text-[11px] text-slate-400 shrink-0">{timeLabel(c.lastAt)}</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 truncate mt-0.5">{c.lastBody}</p>
+                                    </div>
+                                </Link>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 )}
-            </section>
+            </div>
         </div>
     );
 }
