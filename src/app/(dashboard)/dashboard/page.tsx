@@ -30,7 +30,7 @@ export default async function DashboardPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium text-slate-500">Members</CardTitle>
+                        <CardTitle className="text-sm font-medium text-slate-500">Neighbors</CardTitle>
                         <Users className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-slate-800">{stats.eventCount}</div>
-                        <p className="text-xs text-slate-500 mt-1">Scheduled activities</p>
+                        <p className="text-xs text-slate-500 mt-1">Scheduled this month</p>
                     </CardContent>
                 </Card>
 
@@ -63,16 +63,24 @@ export default async function DashboardPage() {
 
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium text-slate-500">Dues Paid</CardTitle>
+                        <CardTitle className="text-sm font-medium text-slate-500">Annual Dues</CardTitle>
                         <Coins className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-slate-800 flex items-baseline gap-1">
                             {stats.paidCount} <span className="text-sm font-normal text-slate-500">/ {stats.totalCount}</span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                            Current period
-                        </p>
+                        <div className="mt-2 w-full">
+                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-amber-500 rounded-full transition-all duration-500 ease-out"
+                                    style={{ width: `${(stats.paidCount / (stats.totalCount || 1)) * 100}%` }}
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
+                                {stats.paidCount} of {stats.totalCount} paid
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -155,24 +163,41 @@ export default async function DashboardPage() {
                                     const hasVoted = userVotes.includes(poll.id);
                                     return (
                                         <Card key={poll.id} className="hover:border-emerald-200 transition-colors">
-                                            <CardContent className="p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                                                <div>
-                                                    <h3 className="font-bold text-slate-900">{poll.question}</h3>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        {hasVoted ? (
-                                                            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center">
-                                                                <CheckCircle2 className="h-3 w-3 mr-1" /> You voted
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md flex items-center">
-                                                                <Clock className="h-3 w-3 mr-1" /> You haven't voted yet
-                                                            </span>
-                                                        )}
+                                            <CardContent className="p-5">
+                                                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                                    <div>
+                                                        <h3 className="font-bold text-slate-900">{poll.question}</h3>
+                                                        <div className="flex items-center gap-2 mt-2">
+                                                            {hasVoted ? (
+                                                                <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center">
+                                                                    <CheckCircle2 className="h-3 w-3 mr-1" /> You voted
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md flex items-center">
+                                                                    <Clock className="h-3 w-3 mr-1" /> You haven't voted yet
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
+                                                    <Button variant={hasVoted ? "secondary" : "default"} size="sm" className="shrink-0 w-full sm:w-auto" asChild>
+                                                        <Link href="/polls">{hasVoted ? "View Results" : "Vote Now"}</Link>
+                                                    </Button>
                                                 </div>
-                                                <Button variant={hasVoted ? "secondary" : "default"} size="sm" className="shrink-0 w-full sm:w-auto" asChild>
-                                                    <Link href="/polls">{hasVoted ? "View Results" : "Vote Now"}</Link>
-                                                </Button>
+
+                                                {hasVoted && (poll as any).results?.topOption && (
+                                                    <div className="mt-3 pt-3 border-t w-full animate-in fade-in slide-in-from-top-1 duration-500">
+                                                        <div className="flex justify-between text-[11px] text-slate-500 mb-1.5 uppercase font-semibold tracking-wider">
+                                                            <span className="truncate max-w-[70%] text-slate-700">Leading: {(poll as any).results.topOption.option}</span>
+                                                            <span className="text-blue-600">{(poll as any).results.topOption.percentage}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out"
+                                                                style={{ width: `${(poll as any).results.topOption.percentage}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </CardContent>
                                         </Card>
                                     )

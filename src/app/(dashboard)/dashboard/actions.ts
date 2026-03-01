@@ -62,6 +62,41 @@ export async function getDashboardData() {
     // Filter active polls
     const activePolls = pollsData.filter(p => !p.endsAt || new Date(p.endsAt) > now).slice(0, 3)
 
+    // Fetch vote counts for these active polls to show previews
+    const pollResultsData = activePolls.length > 0
+        ? await Promise.all(activePolls.map(async (poll) => {
+            const counts = await db.select({
+                optionIndex: votes.optionIndex,
+                count: count()
+            })
+                .from(votes)
+                .where(eq(votes.pollId, poll.id))
+                .groupBy(votes.optionIndex)
+
+            const totalVotes = counts.reduce((acc, curr) => acc + curr.count, 0)
+            const options = poll.options as string[]
+
+            const results = options.map((option, index) => {
+                const voteCount = counts.find(c => c.optionIndex === index)?.count || 0
+                return {
+                    option,
+                    count: voteCount,
+                    percentage: totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0
+                }
+            })
+
+            // Get top option
+            const topOption = [...results].sort((a, b) => b.count - a.count)[0]
+
+            return {
+                pollId: poll.id,
+                totalVotes,
+                results,
+                topOption
+            }
+        }))
+        : []
+
     const memberCount = memberCountData[0]?.count || 0
     const paidCount = paymentStatsData.find(p => p.paid)?.count || 0
     const unpaidCount = paymentStatsData.find(p => !p.paid)?.count || 0
@@ -70,7 +105,10 @@ export async function getDashboardData() {
         user,
         communityName: community?.name || 'Your Community',
         announcements: announcementsData,
-        polls: activePolls,
+        polls: activePolls.map(p => ({
+            ...p,
+            results: pollResultsData.find(r => r.pollId === p.id)
+        })),
         events: eventsData,
         stats: {
             memberCount,

@@ -59,7 +59,7 @@ export function SidebarNav({ role, communityName, joinCode, userName }: { role: 
     );
 
     const renderUserMenu = () => (
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-2 px-2">
             <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
                 {userName ? userName[0] : "U"}
             </div>
@@ -93,7 +93,7 @@ export function SidebarNav({ role, communityName, joinCode, userName }: { role: 
                         <div className="p-4 border-t bg-slate-50">
                             {renderUserMenu()}
                             <form action={signOut}>
-                                <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors mt-2 w-full text-left">
+                                <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors mt-2 w-full text-left px-2">
                                     <LogOut className="h-3 w-3" />
                                     Sign Out
                                 </button>
@@ -104,7 +104,7 @@ export function SidebarNav({ role, communityName, joinCode, userName }: { role: 
             </div>
 
             {/* Desktop Sidebar */}
-            <aside className="w-64 border-r bg-white flex-col hidden md:flex shrink-0">
+            <aside className="w-64 border-r bg-white flex-col hidden md:flex shrink-0 h-screen sticky top-0">
                 <div className="h-16 flex items-center px-6 border-b shrink-0">
                     <Link href="/dashboard" className="flex items-center gap-2">
                         <Building className="h-6 w-6 text-blue-600" />
@@ -118,7 +118,7 @@ export function SidebarNav({ role, communityName, joinCode, userName }: { role: 
                 <div className="border-t flex flex-col p-4 shrink-0 bg-slate-50/50">
                     {renderUserMenu()}
                     <form action={signOut}>
-                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors">
+                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors px-2">
                             <LogOut className="h-3 w-3" />
                             Sign Out
                         </button>

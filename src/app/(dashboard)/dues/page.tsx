@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink, BrainCircuit } from "lucide-react";
 import { format } from "date-fns";
 import { createCheckoutSession, updateCommunityDues, markUserPaid } from "./actions";
-import { WolframAnalytics } from "@/app/(dashboard)/dues/wolfram-analytics";
+import { WolframAnalytics } from "./wolfram_analytics";
 
 export default async function DuesPage() {
     const supabase = await createClient();
