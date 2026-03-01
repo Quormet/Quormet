@@ -82,5 +82,8 @@ export async function deleteMessage(id: number) {
  * cleanup old messages older than retention window; called during listing
  */
 export async function purgeOldMessages() {
-    await db.delete(messages).where(lt(messages.createdAt, sql`now() - interval '${MESSAGE_RETENTION_DAYS} days'`));
+    // compute threshold date in JavaScript to avoid raw SQL
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - MESSAGE_RETENTION_DAYS);
+    await db.delete(messages).where(lt(messages.createdAt, cutoff));
 }
