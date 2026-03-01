@@ -6,6 +6,7 @@ import { Building, LayoutDashboard, Megaphone, Vote, Coins, FileText, Calendar, 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useState } from "react";
+import { signOut } from "@/app/auth/actions";
 
 const allNavItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -17,7 +18,7 @@ const allNavItems = [
     { name: "Directory", href: "/directory", icon: Users },
 ];
 
-export function SidebarNav({ role, communityName, joinCode, userName, signOutAction }: { role: string, communityName: string, joinCode: string, userName: string, signOutAction: () => void }) {
+export function SidebarNav({ role, communityName, joinCode, userName }: { role: string, communityName: string, joinCode: string, userName: string }) {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
 
@@ -30,7 +31,7 @@ export function SidebarNav({ role, communityName, joinCode, userName, signOutAct
         <>
             <div className="mb-6 px-2">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Community</p>
-                <p className="font-medium text-slate-900 truncate">{communityName}</p>
+                <p className="font-medium text-slate-900 truncate">{communityName || "Community"}</p>
                 {role === "admin" && (
                     <p className="text-xs text-slate-500 mt-1">Join Code: <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-blue-700">{joinCode}</span></p>
                 )}
@@ -57,24 +58,14 @@ export function SidebarNav({ role, communityName, joinCode, userName, signOutAct
         </>
     );
 
-    const renderUserMenu = (showSignOut = false) => (
-        <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0 border border-blue-200">
-                {userName ? userName[0].toUpperCase() : "U"}
+    const renderUserMenu = () => (
+        <div className="flex items-center gap-3 mb-2">
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
+                {userName ? userName[0] : "U"}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-sm font-semibold text-slate-900 truncate">{userName}</span>
-                <div className="flex items-center justify-between">
-                    <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium uppercase tracking-wider">{role}</span>
-                    {showSignOut && (
-                        <form action={signOutAction} className="md:hidden">
-                            <button type="submit" className="text-[10px] text-slate-500 hover:text-red-600 font-medium transition-colors flex items-center gap-1">
-                                <LogOut className="h-2.5 w-2.5" />
-                                Exit
-                            </button>
-                        </form>
-                    )}
-                </div>
+                <span className="text-sm font-medium truncate">{userName || "User"}</span>
+                <span className="text-xs text-slate-500 capitalize">{role}</span>
             </div>
         </div>
     );
@@ -87,34 +78,29 @@ export function SidebarNav({ role, communityName, joinCode, userName, signOutAct
                     <Building className="h-5 w-5 text-blue-600" />
                     <span className="font-bold tracking-tight">Quormet</span>
                 </Link>
-                
-                <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 text-xs font-bold border border-blue-100 italic">
-                        {userName ? userName[0].toUpperCase() : "U"}
-                    </div>
-                    <Sheet open={open} onOpenChange={setOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="-mr-2">
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="w-[280px] p-0 flex flex-col">
-                            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                            <div className="p-4 space-y-1 flex-1 overflow-auto mt-6">
-                                {renderNavLinks()}
-                            </div>
-                            <div className="p-4 border-t bg-slate-50">
-                                {renderUserMenu(true)}
-                                <form action={signOutAction} className="hidden md:block">
-                                    <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors mt-3 w-full text-left font-medium">
-                                        <LogOut className="h-3.5 w-3.5" />
-                                        Sign Out
-                                    </button>
-                                </form>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                </div>
+
+                <Sheet open={open} onOpenChange={setOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="-mr-2">
+                            <Menu className="h-5 w-5" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[280px] p-0 flex flex-col">
+                        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                        <div className="p-4 space-y-1 flex-1 overflow-auto mt-6">
+                            {renderNavLinks()}
+                        </div>
+                        <div className="p-4 border-t bg-slate-50">
+                            {renderUserMenu()}
+                            <form action={signOut}>
+                                <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors mt-2 w-full text-left">
+                                    <LogOut className="h-3 w-3" />
+                                    Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    </SheetContent>
+                </Sheet>
             </div>
 
             {/* Desktop Sidebar */}
@@ -129,11 +115,11 @@ export function SidebarNav({ role, communityName, joinCode, userName, signOutAct
                 <div className="p-4 space-y-1 flex-1 overflow-auto">
                     {renderNavLinks()}
                 </div>
-                <div className="border-t flex flex-col p-4 shrink-0 bg-slate-50/80 mt-auto">
+                <div className="border-t flex flex-col p-4 shrink-0 bg-slate-50/50">
                     {renderUserMenu()}
-                    <form action={signOutAction} className="mt-3">
-                        <button type="submit" className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors group">
-                            <LogOut className="h-3.5 w-3.5 group-hover:animate-pulse" />
+                    <form action={signOut}>
+                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors">
+                            <LogOut className="h-3 w-3" />
                             Sign Out
                         </button>
                     </form>

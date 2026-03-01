@@ -31,7 +31,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 communityName={community?.name || ""}
                 joinCode={community?.joinCode || ""}
                 userName={dbUser.name}
-                signOutAction={signOut}
             />
 
             <main className="flex-1 flex flex-col min-h-0 overflow-auto">

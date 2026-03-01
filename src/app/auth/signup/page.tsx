@@ -43,25 +43,26 @@ export default function SignupPage() {
         if (!validateForm(formData)) return
 
         setIsLoading(true)
-        try {
-            await signUp(formData)
-            toast.success('Check your email to confirm your account!')
-            // Redirect will happen after clicking confirmation link
-        } catch (error: any) {
-            toast.error(error.message)
+        const result = await signUp(formData)
+
+        if (result?.error) {
+            toast.error(result.error)
+            setIsLoading(false)
+        } else if (result?.success) {
+            toast.success(result.message)
             setIsLoading(false)
         }
     }
 
     async function handleDemoLogin() {
         setIsLoading(true)
-        try {
-            await signInAsDemo()
-        } catch (error: any) {
-            toast.error(error.message)
+        const result = await signInAsDemo()
+        if (result?.error) {
+            toast.error(result.error)
             setIsLoading(false)
         }
     }
+
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
@@ -150,6 +151,7 @@ export default function SignupPage() {
                     >
                         Try Demo Account
                     </Button>
+
 
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink, BrainCircuit } from "lucide-react";
 import { format } from "date-fns";
 import { createCheckoutSession, updateCommunityDues, markUserPaid } from "./actions";
-import { WolframAnalytics } from "./wolfram-analytics";
+import { WolframAnalytics } from "@/app/(dashboard)/dues/wolfram-analytics";
 
 export default async function DuesPage() {
     const supabase = await createClient();
@@ -47,7 +47,7 @@ export default async function DuesPage() {
             <div className="grid md:grid-cols-2 gap-6 items-start">
                 {/* Member Status Card */}
                 <Card className={dbUser.duesPaid ? "border-emerald-200" : "border-red-200"}>
-                    <div className={`h - 2 w - full absolute top - 0 left - 0 ${dbUser.duesPaid ? "bg-emerald-500" : "bg-red-500"} `} />
+                    <div className={`h-2 w-full absolute top-0 left-0 ${dbUser.duesPaid ? "bg-emerald-500" : "bg-red-500"}`} />
                     <CardHeader className="pt-8">
                         <CardTitle>Your Dues Status</CardTitle>
                         <CardDescription>

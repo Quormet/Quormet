@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, signInWithOAuth, signInAsDemo } from '../actions'
+import { signIn, signInWithOAuth } from '../actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
@@ -44,23 +44,16 @@ export default function LoginPage() {
         if (!validateForm(formData)) return
 
         setIsLoading(true)
-        try {
-            await signIn(formData)
-        } catch (error: any) {
-            toast.error(error.message || 'Invalid email or password')
+        const result = await signIn(formData)
+
+        if (result?.error) {
+            toast.error(result.error)
             setIsLoading(false)
         }
+        // If successful, the server action will redirect automatically
     }
 
-    async function handleDemoLogin() {
-        setIsLoading(true)
-        try {
-            await signInAsDemo()
-        } catch (error: any) {
-            toast.error(error.message)
-            setIsLoading(false)
-        }
-    }
+
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
@@ -137,14 +130,7 @@ export default function LoginPage() {
                         </Button>
                     </div>
 
-                    <Button
-                        variant="ghost"
-                        className="w-full text-slate-500 font-normal"
-                        onClick={handleDemoLogin}
-                        disabled={isLoading}
-                    >
-                        Try Demo Account
-                    </Button>
+
 
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">

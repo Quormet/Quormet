@@ -44,9 +44,7 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/directory') ||
         request.nextUrl.pathname.startsWith('/documents');
 
-    const isDemoMode = request.cookies.get('quormet_demo_mode')?.value === 'true';
-
-    if (!user && isProtectedRoute && !isDemoMode) {
+    if (!user && isProtectedRoute) {
         return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 
