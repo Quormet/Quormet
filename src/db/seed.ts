@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config({ path: ".env" });
 import { db } from "./index";
-import { communities, users, announcements, events, documents, polls, payments, rsvps, votes } from "./schema";
+import { communities, users, announcements, events, documents, polls, payments, rsvps, votes, vendors, issues, issueUpdates } from "./schema";
 import { addDays, subDays } from "date-fns";
 import { sql } from "drizzle-orm";
 
@@ -144,6 +144,70 @@ async function main() {
             { id: "3", text: "White" }
         ]
     });
+
+    // 7. Create Vendors
+    console.log("Creating vendors...");
+    const [vendor1] = await db.insert(vendors).values({
+        communityId: community.id,
+        name: 'ABC Gate Repair',
+        categories: ['maintenance', 'security'],
+        phone: '(303) 555-0120',
+        email: 'contact@abcgate.com',
+    }).returning();
+
+    const [vendor2] = await db.insert(vendors).values({
+        communityId: community.id,
+        name: "Bob's Electric",
+        categories: ['electrical'],
+        phone: '(303) 555-0145',
+    }).returning();
+
+    // 8. Create Issues
+    console.log("Creating issues...");
+    const [issue1] = await db.insert(issues).values({
+        communityId: community.id,
+        reportedBy: member1.id,
+        title: 'Broken gate latch — Building A entrance',
+        description: 'The latch on the main entrance gate is broken. The gate swings open freely.',
+        category: 'maintenance',
+        location: 'Building A main entrance',
+        status: 'board_review',
+    }).returning();
+
+    const [issue2] = await db.insert(issues).values({
+        communityId: community.id,
+        reportedBy: member2.id,
+        title: 'Parking lot light out — Spot 24',
+        description: 'The overhead light near spot 24 has been out for a week. Safety concern at night.',
+        category: 'safety',
+        location: 'Parking lot, spot 24',
+        status: 'in_progress',
+        assignedVendorId: vendor2.id,
+    }).returning();
+
+    const [issue3] = await db.insert(issues).values({
+        communityId: community.id,
+        reportedBy: member1.id,
+        title: 'Graffiti on east wall',
+        description: 'Graffiti appeared overnight on the east perimeter wall near the mailboxes.',
+        category: 'maintenance',
+        location: 'East perimeter wall',
+        status: 'resolved',
+        assignedVendorId: vendor1.id,
+    }).returning();
+
+    // 9. Create Issue Updates
+    console.log("Creating issue updates...");
+    await db.insert(issueUpdates).values([
+        { issueId: issue1.id, updatedBy: adminUser.id, previousStatus: null, newStatus: 'submitted', note: 'Issue received.' },
+        { issueId: issue1.id, updatedBy: adminUser.id, previousStatus: 'submitted', newStatus: 'board_review', note: 'Getting quotes from vendors.' },
+        { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: null, newStatus: 'submitted', note: 'Issue received.' },
+        { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'submitted', newStatus: 'board_review', note: null },
+        { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'board_review', newStatus: 'vendor_assigned', note: "Bob's Electric assigned." },
+        { issueId: issue2.id, updatedBy: adminUser.id, previousStatus: 'vendor_assigned', newStatus: 'in_progress', note: 'Electrician on site today.' },
+        { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: null, newStatus: 'submitted', note: 'Issue received.' },
+        { issueId: issue3.id, updatedBy: adminUser.id, previousStatus: 'submitted', newStatus: 'resolved', note: 'Wall cleaned and repainted.' },
+    ]);
 
     console.log("Database seeded successfully!");
     process.exit(0);

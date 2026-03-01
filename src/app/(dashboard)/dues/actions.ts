@@ -2,11 +2,11 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { users, communities, payments } from "@/db/schema";
+import { users, communities, payments, communityMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import Stripe from "stripe";
 async function getAuthUser() {
     const supabase = await createClient();
@@ -14,9 +14,25 @@ async function getAuthUser() {
     if (!user) throw new Error("Unauthorized");
 
     const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
-    if (!dbUser || !dbUser.communityId) throw new Error("No community found");
+    if (!dbUser) throw new Error("No user found");
 
-    return dbUser;
+    // Determine active community from cookie
+    const cookieStore = await cookies();
+    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
+    const communityId = activeCookieVal ? parseInt(activeCookieVal) : dbUser.communityId;
+    if (!communityId) throw new Error("No community found");
+
+    // Resolve role from community_members
+    const [membership] = await db
+        .select()
+        .from(communityMembers)
+        .where(and(
+            eq(communityMembers.userId, dbUser.id),
+            eq(communityMembers.communityId, communityId)
+        ))
+        .limit(1);
+
+    return { ...dbUser, communityId, role: membership?.role ?? dbUser.role };
 }
 
 export async function createCheckoutSession() {
@@ -87,9 +103,16 @@ export async function markUserPaid(userIdToMark: number, isPaid: boolean) {
     const user = await getAuthUser();
     if (user.role !== "admin") throw new Error("Only admins can manually mark users as paid");
 
-    // Validate user belongs to community
-    const [targetUser] = await db.select().from(users).where(eq(users.id, userIdToMark)).limit(1);
-    if (!targetUser || targetUser.communityId !== user.communityId) {
+    // Validate user belongs to community via community_members
+    const [targetMembership] = await db
+        .select()
+        .from(communityMembers)
+        .where(and(
+            eq(communityMembers.userId, userIdToMark),
+            eq(communityMembers.communityId, user.communityId!)
+        ))
+        .limit(1);
+    if (!targetMembership) {
         throw new Error("Invalid user");
     }
 

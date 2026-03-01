@@ -3,23 +3,24 @@
  * announcements, polls, votes, documents, events, RSVPs, and payments, along with their 
  * relational mappings.
  */
-import { pgTable, serial, text, timestamp, boolean, integer, json, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, boolean, integer, json, varchar, unique, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const communities = pgTable('communities', {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
     joinCode: varchar('join_code', { length: 50 }).notNull().unique(),
-    duesAmount: integer('dues_amount').notNull().default(0), 
-    duesPeriod: text('dues_period').notNull().default('monthly'), 
+    duesAmount: integer('dues_amount').notNull().default(0),
+    duesPeriod: text('dues_period').notNull().default('monthly'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const users = pgTable('users', {
     id: serial('id').primaryKey(),
     supabaseId: text('supabase_id').notNull().unique(),
+    // Legacy: kept for Stripe webhook compatibility; use community_members for active context
     communityId: integer('community_id').references(() => communities.id),
-    role: text('role').notNull().default('member'), 
+    role: text('role').notNull().default('member'),
     name: text('name').notNull(),
     email: text('email').notNull(),
     address: text('address'),
@@ -28,6 +29,17 @@ export const users = pgTable('users', {
     duesPaid: boolean('dues_paid').notNull().default(false),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// Many-to-many: a user can belong to multiple communities with different roles
+export const communityMembers = pgTable('community_members', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    communityId: integer('community_id').notNull().references(() => communities.id, { onDelete: 'cascade' }),
+    role: text('role').notNull().default('member'), // 'admin' | 'member'
+    joinedAt: timestamp('joined_at').defaultNow().notNull(),
+}, (t) => ({
+    uniq: unique().on(t.userId, t.communityId),
+}));
 
 export const announcements = pgTable('announcements', {
     id: serial('id').primaryKey(),
@@ -44,7 +56,7 @@ export const polls = pgTable('polls', {
     communityId: integer('community_id').notNull().references(() => communities.id),
     authorId: integer('author_id').notNull().references(() => users.id),
     question: text('question').notNull(),
-    options: json('options').notNull(), 
+    options: json('options').notNull(),
     endsAt: timestamp('ends_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -81,7 +93,7 @@ export const rsvps = pgTable('rsvps', {
     id: serial('id').primaryKey(),
     eventId: integer('event_id').notNull().references(() => events.id),
     userId: integer('user_id').notNull().references(() => users.id),
-    response: text('response').notNull(), 
+    response: text('response').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -89,13 +101,14 @@ export const payments = pgTable('payments', {
     id: serial('id').primaryKey(),
     userId: integer('user_id').notNull().references(() => users.id),
     communityId: integer('community_id').notNull().references(() => communities.id),
-    amount: integer('amount').notNull(), 
+    amount: integer('amount').notNull(),
     stripeSessionId: text('stripe_session_id'),
     paidAt: timestamp('paid_at').defaultNow().notNull(),
 });
 
 export const communitiesRelations = relations(communities, ({ many }) => ({
     users: many(users),
+    members: many(communityMembers),
     announcements: many(announcements),
     polls: many(polls),
     documents: many(documents),
@@ -107,11 +120,23 @@ export const usersRelations = relations(users, ({ one, many }) => ({
         fields: [users.communityId],
         references: [communities.id],
     }),
+    memberships: many(communityMembers),
     announcements: many(announcements),
     votes: many(votes),
     uploadedDocuments: many(documents),
     rsvps: many(rsvps),
     payments: many(payments),
+}));
+
+export const communityMembersRelations = relations(communityMembers, ({ one }) => ({
+    user: one(users, {
+        fields: [communityMembers.userId],
+        references: [users.id],
+    }),
+    community: one(communities, {
+        fields: [communityMembers.communityId],
+        references: [communities.id],
+    }),
 }));
 
 export const announcementsRelations = relations(announcements, ({ one }) => ({
@@ -166,3 +191,54 @@ export const rsvpsRelations = relations(rsvps, ({ one }) => ({
         references: [users.id],
     }),
 }));
+
+// Issues table
+export const issues = pgTable('issues', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    communityId: integer('community_id').references(() => communities.id).notNull(),
+    reportedBy: integer('reported_by').references(() => users.id).notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    category: text('category').notNull(), // maintenance | safety | noise | parking | other
+    location: text('location').notNull(),
+    photoUrl: text('photo_url'),
+    status: text('status').notNull().default('submitted'),
+    // submitted | board_review | vendor_assigned | in_progress | resolved
+    assignedVendorId: uuid('assigned_vendor_id').references(() => vendors.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// Issue updates / activity log
+export const issueUpdates = pgTable('issue_updates', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    issueId: uuid('issue_id').references(() => issues.id).notNull(),
+    updatedBy: integer('updated_by').references(() => users.id).notNull(),
+    previousStatus: text('previous_status'),
+    newStatus: text('new_status').notNull(),
+    note: text('note'), // optional admin note with each status change
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Vendors table
+export const vendors = pgTable('vendors', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    communityId: integer('community_id').references(() => communities.id).notNull(),
+    name: text('name').notNull(),
+    categories: text('categories').array(), // ['maintenance', 'electrical', etc]
+    phone: text('phone'),
+    email: text('email'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Vendor ratings
+export const vendorRatings = pgTable('vendor_ratings', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    vendorId: uuid('vendor_id').references(() => vendors.id).notNull(),
+    issueId: uuid('issue_id').references(() => issues.id).notNull(),
+    ratedBy: integer('rated_by').references(() => users.id).notNull(),
+    rating: integer('rating').notNull(), // 1-5
+    comment: text('comment'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+

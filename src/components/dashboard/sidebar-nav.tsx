@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Building, LayoutDashboard, Megaphone, Vote, Coins, FileText, Calendar, Users, LogOut, Settings, Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Building, LayoutDashboard, Megaphone, Vote, Coins, FileText, Calendar, Users, LogOut, Settings, Menu, ChevronDown, Check, ClipboardList, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState, useTransition } from "react";
 import { signOut } from "@/app/auth/actions";
+import { setActiveCommunity } from "@/utils/setCommunity";
 
 const allNavItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -16,27 +18,111 @@ const allNavItems = [
     { name: "Document Vault", href: "/documents", icon: FileText },
     { name: "Events", href: "/events", icon: Calendar },
     { name: "Directory", href: "/directory", icon: Users },
+    { name: "Issues", href: "/issues", icon: ClipboardList },
 ];
 
-export function SidebarNav({ role, communityName, joinCode, userName }: { role: string, communityName: string, joinCode: string, userName: string }) {
+type Membership = {
+    id: number;
+    communityId: number;
+    role: string;
+};
+
+type Community = {
+    id: number;
+    name: string;
+};
+
+export function SidebarNav({
+    role,
+    communityName,
+    joinCode,
+    userName,
+    activeCommunityId,
+    memberships = [],
+    communities = [],
+}: {
+    role: string;
+    communityName: string;
+    joinCode: string;
+    userName: string;
+    activeCommunityId?: number;
+    memberships?: Membership[];
+    communities?: Community[];
+}) {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     const navItems = [...allNavItems];
     if (role === "admin") {
+        navItems.push({ name: "Vendors", href: "/vendors", icon: Briefcase });
         navItems.push({ name: "Settings", href: "/settings", icon: Settings });
     }
 
-    const renderNavLinks = () => (
-        <>
+    function handleSwitchCommunity(communityId: number) {
+        startTransition(async () => {
+            await setActiveCommunity(communityId);
+        });
+    }
+
+    const renderCommunitySwitcher = () => {
+        if (communities.length <= 1) {
+            return (
+                <div className="mb-6 px-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Community</p>
+                    <p className="font-medium text-slate-900 truncate">{communityName || "Community"}</p>
+                    {role === "admin" && (
+                        <p className="text-xs text-slate-500 mt-1">Join Code: <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-blue-700">{joinCode}</span></p>
+                    )}
+                </div>
+            );
+        }
+
+        return (
             <div className="mb-6 px-2">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Community</p>
-                <p className="font-medium text-slate-900 truncate">{communityName || "Community"}</p>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button disabled={isPending} className="w-full flex items-center justify-between gap-2 text-left font-medium text-slate-900 hover:text-blue-700 transition-colors">
+                            <span className="truncate">{communityName || "Community"}</span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56">
+                        {communities.map((c) => {
+                            const m = memberships.find(m => m.communityId === c.id);
+                            return (
+                                <DropdownMenuItem
+                                    key={c.id}
+                                    onClick={() => handleSwitchCommunity(c.id)}
+                                    className="flex items-center justify-between"
+                                >
+                                    <div>
+                                        <p className="font-medium text-sm">{c.name}</p>
+                                        <p className="text-xs text-slate-500 capitalize">{m?.role || "member"}</p>
+                                    </div>
+                                    {c.id === activeCommunityId && <Check className="h-4 w-4 text-blue-600" />}
+                                </DropdownMenuItem>
+                            );
+                        })}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/onboarding" className="text-sm text-slate-500">
+                                + Join another community
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
                 {role === "admin" && (
                     <p className="text-xs text-slate-500 mt-1">Join Code: <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-blue-700">{joinCode}</span></p>
                 )}
             </div>
+        );
+    };
 
+    const renderNavLinks = () => (
+        <>
+            {renderCommunitySwitcher()}
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-2 mt-6">Menu</p>
             {navItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");

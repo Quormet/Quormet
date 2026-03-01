@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { communities, events, polls, documents, users, payments } from '@/db/schema'
+import { communities, events, polls, documents, communityMembers, payments } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { format } from 'date-fns'
 
@@ -11,8 +11,8 @@ export async function buildSystemPrompt(user: any): Promise<string> {
     const activePolls = await db.select().from(polls).where(eq(polls.communityId, user.communityId));
     const allDocs = await db.select().from(documents).where(eq(documents.communityId, user.communityId));
 
-    const allUsers = await db.select().from(users).where(eq(users.communityId, user.communityId));
-    const memberCount = allUsers.length;
+    const allMembers = await db.select().from(communityMembers).where(eq(communityMembers.communityId, user.communityId));
+    const memberCount = allMembers.length;
 
     const allPayments = await db.select().from(payments).where(eq(payments.communityId, user.communityId));
     const paidCount = new Set(allPayments.map(p => p.userId)).size;
