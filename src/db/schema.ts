@@ -51,6 +51,16 @@ export const announcements = pgTable('announcements', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// simple direct messages between members. only the recipient should see each message.
+export const messages = pgTable('messages', {
+    id: serial('id').primaryKey(),
+    communityId: integer('community_id').notNull().references(() => communities.id),
+    senderId: integer('sender_id').notNull().references(() => users.id),
+    recipientId: integer('recipient_id').notNull().references(() => users.id),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const polls = pgTable('polls', {
     id: serial('id').primaryKey(),
     communityId: integer('community_id').notNull().references(() => communities.id),
@@ -110,6 +120,7 @@ export const communitiesRelations = relations(communities, ({ many }) => ({
     users: many(users),
     members: many(communityMembers),
     announcements: many(announcements),
+    messages: many(messages),
     polls: many(polls),
     documents: many(documents),
     events: many(events),
@@ -122,6 +133,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     }),
     memberships: many(communityMembers),
     announcements: many(announcements),
+    sentMessages: many(messages),
+    receivedMessages: many(messages),
     votes: many(votes),
     uploadedDocuments: many(documents),
     rsvps: many(rsvps),
