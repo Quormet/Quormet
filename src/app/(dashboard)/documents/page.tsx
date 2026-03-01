@@ -1,24 +1,22 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { db } from "@/db";
 import { users, documents } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { getPlanAccess } from "@/utils/planAccess";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { FileText, Download, Trash2, PlusCircle } from "lucide-react";
-import { addDocument, deleteDocument } from "./actions";
+import { FileText, Download, PlusCircle, Lock } from "lucide-react";
+import { addDocument } from "./actions";
 
 import { DeleteDocumentButton } from "./delete-button";
 
 export default async function DocumentsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/sign-in");
-
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
+    const dbUser = await getCurrentUser();
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
+
+    const planAccess = await getPlanAccess();
 
     // Fetch documents with uploader details
     const allDocs = await db.select({
@@ -77,7 +75,7 @@ export default async function DocumentsPage() {
                                                         <FileText className="h-4 w-4" />
                                                         {doc.category}
                                                     </div>
-                                                    {dbUser.role === "admin" && (
+                                                    {dbUser.role === "admin" && planAccess?.canManageDocuments && (
                                                         <DeleteDocumentButton id={doc.id} />
                                                     )}
                                                 </div>
@@ -104,10 +102,13 @@ export default async function DocumentsPage() {
                 {dbUser.role === "admin" && (
                     <Card className="md:col-span-1 sticky top-6">
                         <CardHeader>
-                            <CardTitle>Upload Document</CardTitle>
+                            <CardTitle className="flex justify-between items-center">
+                                Upload Document
+                                {!planAccess?.canManageDocuments && <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade</span>}
+                            </CardTitle>
                             <CardDescription>Share a file with your community members.</CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className={!planAccess?.canManageDocuments ? "opacity-50 pointer-events-none" : ""}>
                             <form action={addDocument} className="space-y-4 text-sm">
                                 <div className="space-y-2">
                                     <label htmlFor="name" className="font-medium">File Name</label>
@@ -127,7 +128,6 @@ export default async function DocumentsPage() {
                                 <div className="space-y-2">
                                     <label htmlFor="fileUrl" className="font-medium">File Link (URL)</label>
                                     <Input id="fileUrl" name="fileUrl" type="url" placeholder="https://..." required />
-                                    <p className="text-xs text-slate-500">For V1, paste a link to Google Drive, Dropbox, or any public file URL.</p>
                                 </div>
 
                                 <Button type="submit" className="w-full mt-2">

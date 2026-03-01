@@ -3,7 +3,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Send, Loader2, Bot } from 'lucide-react'
+import { Send, Loader2, Bot, Lock } from 'lucide-react'
+import Link from 'next/link'
 import AssistantMessage from './AssistantMessage'
 import SuggestedPrompts from './SuggestedPrompts'
 
@@ -20,7 +21,7 @@ const SUGGESTED_PROMPTS = [
     'Who hasn\'t paid dues?',
 ]
 
-export default function AssistantChat({ userRole }: { userRole: 'admin' | 'member' }) {
+export default function AssistantChat({ userRole, canUseAI }: { userRole: 'admin' | 'member', canUseAI: boolean }) {
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -68,18 +69,7 @@ export default function AssistantChat({ userRole }: { userRole: 'admin' | 'membe
     }
 
     return (
-        <div className="flex flex-col h-full bg-background">
-            {/* Header */}
-            <div className="flex items-center gap-2 p-4 border-b">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-primary-foreground" />
-                </div>
-                <div>
-                    <p className="font-semibold text-sm">Quormet Assistant</p>
-                    <p className="text-xs text-muted-foreground">Ask anything about your community</p>
-                </div>
-            </div>
-
+        <div className="flex flex-col h-full bg-background/50">
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
                 {messages.length === 0 ? (
@@ -103,24 +93,41 @@ export default function AssistantChat({ userRole }: { userRole: 'admin' | 'membe
                 )}
             </ScrollArea>
 
-            {/* Input */}
-            <div className="p-4 border-t flex gap-2">
-                <Input
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && sendMessage(input)}
-                    placeholder="Ask anything or give a command..."
-                    disabled={loading}
-                    className="flex-1"
-                />
-                <Button
-                    onClick={() => sendMessage(input)}
-                    disabled={loading || !input.trim()}
-                    size="icon"
-                >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                </Button>
-            </div>
+            {/* Input or Paywall */}
+            {!canUseAI ? (
+                <div className="p-4 border-t bg-slate-50 flex flex-col items-center text-center space-y-3">
+                    <div className="bg-primary/10 text-primary p-2 rounded-full">
+                        <Lock className="w-5 h-5" />
+                    </div>
+                    <h4 className="font-semibold text-sm">AI Assistant is a Pro feature</h4>
+                    <p className="text-xs text-slate-500">
+                        Upgrade to Member Pro for $3/month to unlock the AI assistant and more. Your board hasn't upgraded yet — you can unlock it for yourself.
+                    </p>
+                    <div className="flex gap-2 w-full pt-2">
+                        <Button className="flex-1 text-xs h-8" asChild>
+                            <Link href="/pricing">Upgrade for $3/mo</Link>
+                        </Button>
+                    </div>
+                </div>
+            ) : (
+                <div className="p-4 border-t flex gap-2">
+                    <Input
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && sendMessage(input)}
+                        placeholder="Ask anything or give a command..."
+                        disabled={loading}
+                        className="flex-1"
+                    />
+                    <Button
+                        onClick={() => sendMessage(input)}
+                        disabled={loading || !input.trim()}
+                        size="icon"
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }

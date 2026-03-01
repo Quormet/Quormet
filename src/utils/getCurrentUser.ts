@@ -25,7 +25,11 @@ export async function getCurrentUser() {
 
         if (memberships.length === 0) {
             // Fall back to legacy communityId if no memberships yet (migration edge case)
-            return dbUser
+            return {
+                ...dbUser,
+                duesPaid: false,
+                memberships: [],
+            }
         }
 
         // Determine activeCommunityId: prefer cookie, else first membership
@@ -37,6 +41,7 @@ export async function getCurrentUser() {
             ...dbUser,
             communityId: activeMembership.communityId,
             role: activeMembership.role,
+            duesPaid: activeMembership.duesPaid,
             memberships,
         }
     } catch (err: any) {

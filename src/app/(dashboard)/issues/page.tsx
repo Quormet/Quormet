@@ -65,7 +65,7 @@ export default async function IssuesPage() {
             <div className="grid gap-4 bg-background">
                 {issuesWithDetails.map(({ issue, reporterName, vendorName }) => (
                     <Link key={issue.id} href={`/issues/${issue.id}`} className="block">
-                        <Card className="p-5 hover:border-primary/50 transition-colors bg-card shadow-sm group">
+                        <Card className="p-5 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer bg-card shadow-sm group">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">

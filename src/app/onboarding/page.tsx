@@ -308,8 +308,11 @@ export default function OnboardingPage() {
                                     <span className="text-5xl">🎉</span>
                                 </div>
                                 <h2 className="text-2xl font-bold mb-2">Community created successfully!</h2>
-                                <p className="text-slate-500 mb-8 max-w-md">
+                                <p className="text-slate-500 mb-2 max-w-md">
                                     You are now the admin. Share the code below with your members so they can join.
+                                </p>
+                                <p className="text-xs text-slate-400 mb-8 max-w-md">
+                                    Every decision made here is transparent, recorded, and accountable.
                                 </p>
 
                                 <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl w-full max-w-sm mb-8 relative group">
@@ -329,7 +332,7 @@ export default function OnboardingPage() {
                                 </div>
 
                                 <Button size="lg" className="w-full h-14 text-base shadow-lg shadow-blue-200" onClick={() => router.push('/home')}>
-                                    Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                                    Go to your community <ArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </CardContent>
                         </Card>

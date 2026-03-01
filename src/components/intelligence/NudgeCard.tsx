@@ -22,14 +22,34 @@ const PRIORITY_BORDER = {
     low: 'border-l-blue-300',
 }
 
+import { useState } from 'react'
+import { createDraftAnnouncementFromPoll } from './actions'
+import { useRouter } from 'next/navigation'
+
 export default function NudgeCard({
     nudge,
-    onAction,
 }: {
     nudge: Nudge
-    onAction?: (action: string, data: Record<string, any>) => void
 }) {
     const { icon: Icon, color } = ICONS[nudge.type]
+    const [isPending, setIsPending] = useState(false)
+    const router = useRouter()
+
+    const handleAction = async (actionStr?: string, data?: any) => {
+        if (!actionStr) return
+
+        setIsPending(true)
+        try {
+            if (actionStr === 'draft_announcement' && data?.pollId) {
+                await createDraftAnnouncementFromPoll(data.pollId)
+                router.push("/announcements")
+            }
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setIsPending(false)
+        }
+    }
 
     return (
         <Card className={cn(
@@ -55,9 +75,10 @@ export default function NudgeCard({
                                     variant="outline"
                                     size="sm"
                                     className="h-7 text-xs"
-                                    onClick={() => onAction && action.action ? onAction(action.action, nudge.data) : undefined}
+                                    disabled={isPending}
+                                    onClick={() => handleAction(action.action, nudge.data)}
                                 >
-                                    {action.label}
+                                    {isPending ? "Working..." : action.label}
                                 </Button>
                             )
                         ))}

@@ -1,5 +1,6 @@
 import { getIssue, getVendors } from '../actions'
 import { getCurrentUser } from '@/utils/getCurrentUser'
+import { getPlanAccess } from '@/utils/planAccess'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { ArrowLeft, MapPin, Tag, ImageIcon, MessageSquare } from 'lucide-react'
@@ -19,6 +20,9 @@ export default async function IssueDetailPage({ params }: { params: { id: string
 
     const { issue, reporterName, vendorName, updates } = await getIssue(idValue)
     const vendors = user.role === 'admin' ? await getVendors() : []
+
+    const planAccess = await getPlanAccess()
+    const canAssignVendors = planAccess?.isCommunity ?? false
 
     return (
         <div className="p-4 md:p-8 max-w-4xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -126,6 +130,7 @@ export default async function IssueDetailPage({ params }: { params: { id: string
                             currentStatus={issue.status}
                             vendors={vendors}
                             currentVendorId={issue.assignedVendorId}
+                            canAssignVendors={canAssignVendors}
                         />
                     ) : (
                         issue.status === 'resolved' && vendorName && (

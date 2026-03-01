@@ -42,3 +42,13 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# build & debug logs
+build-log.txt
+build.log
+debug.log
+seed.log
+tsc-log.txt
+tmp_tsc_out.txt
+test_api.ts
+scripts/test_ai2.js

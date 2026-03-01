@@ -1,21 +1,18 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq, or, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Users, Mail, Phone, MapPin, EyeOff } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Mail, Phone, MapPin, EyeOff, Search, Lock } from "lucide-react";
 import { ProfileForm } from "./profile-form";
+import { getPlanAccess } from "@/utils/planAccess";
 
 export default async function DirectoryPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/sign-in");
-
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
+    const dbUser = await getCurrentUser();
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
+
+    const planAccess = await getPlanAccess();
 
     // Admins see everyone. Members see only opted-in users (plus themselves).
     const conditions = dbUser.role === "admin"
@@ -28,7 +25,8 @@ export default async function DirectoryPage() {
     const directoryMembers = await db.select().from(users).where(conditions);
 
     // Split into self and others
-    const me = directoryMembers.find(m => m.id === dbUser.id)!;
+    const me = directoryMembers.find(m => m.id === dbUser.id);
+    if (!me) return null; // Should not happen
     const membersList = directoryMembers.filter(m => m.id !== dbUser.id);
 
     return (
@@ -66,12 +64,35 @@ export default async function DirectoryPage() {
                         )}
                     </div>
 
+                    <div className={`relative ${!planAccess?.isCommunity && !planAccess?.isPro ? 'opacity-60 pointer-events-none' : ''}`}>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search by name or skill tag..."
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            disabled
+                        />
+                        {!planAccess?.isCommunity && !planAccess?.isPro && (
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-amber-600 text-xs font-medium">
+                                <Lock className="h-3 w-3 mr-1" /> Upgrade to search skills
+                            </div>
+                        )}
+                    </div>
+
                     <div className="grid sm:grid-cols-2 gap-4">
                         {membersList.length === 0 ? (
-                            <div className="sm:col-span-2 text-center py-12 px-4 bg-white border border-dashed rounded-lg">
-                                <p className="text-slate-500">No other members are listed in the directory yet.</p>
+                            <div className="sm:col-span-2 text-center py-16 px-4 bg-white border border-dashed rounded-lg">
+                                <Users className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+                                <h3 className="text-lg font-medium text-slate-900 mb-1">Building the Directory</h3>
+                                <p className="text-slate-500 max-w-sm mx-auto">
+                                    When other members opt-in to the directory, they will appear here. Encourage your members to join!
+                                </p>
                                 {dbUser.role === "admin" && (
-                                    <p className="text-xs text-slate-400 mt-1">As an admin, you see everyone. Members haven't joined yet.</p>
+                                    <p className="text-xs text-blue-600 mt-4 font-semibold uppercase tracking-wider">
+                                        Admin Tip: You're seeing all members, but they must opt-in to see each other.
+                                    </p>
                                 )}
                             </div>
                         ) : (

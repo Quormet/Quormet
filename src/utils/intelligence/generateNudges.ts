@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { polls, issues, events, users, payments } from '@/db/schema'
+import { polls, issues, events, users, payments, communities } from '@/db/schema'
 import { eq, and, lt, gt, isNull, count } from 'drizzle-orm'
 import { subDays, addDays } from 'date-fns'
 
@@ -118,10 +118,13 @@ export async function generateNudges(communityId: number): Promise<Nudge[]> {
     }
 
     // Dues nudge
+    const [community] = await db.select().from(communities).where(eq(communities.id, communityId)).limit(1)
+    const duesConfigured = community && community.duesAmount > 0
+
     const total = Number(memberCount[0]?.count ?? 0)
     const paid = Number(paidCount[0]?.count ?? 0)
     const unpaid = total - paid
-    if (unpaid > 0) {
+    if (unpaid > 0 && duesConfigured) {
         nudges.push({
             id: 'dues-unpaid',
             type: 'dues_overdue',
@@ -131,7 +134,7 @@ export async function generateNudges(communityId: number): Promise<Nudge[]> {
                 ? `1 member hasn't paid dues yet.`
                 : `${unpaid} of ${total} members haven't paid dues yet.`,
             actions: [
-                { label: 'View Unpaid', href: '/dues' },
+                { label: 'View Unpaid', href: '/payments' },
             ],
             data: { unpaid, total },
         })

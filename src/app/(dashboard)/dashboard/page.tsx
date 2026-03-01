@@ -1,5 +1,4 @@
 import { getDashboardData } from './actions'
-import AssistantPanel from '@/components/assistant/AssistantPanel'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Megaphone, Vote, Coins, Calendar, ArrowRight, CheckCircle2, Clock, PlusCircle, Users } from "lucide-react"
@@ -8,8 +7,11 @@ import PersonalTodos from '@/components/intelligence/PersonalTodos'
 import IntelligencePanel from '@/components/intelligence/IntelligencePanel'
 import { format, formatDistanceToNow } from 'date-fns'
 import { getTerms } from '@/utils/communityTerms'
+import { getPlanAccess } from '@/utils/planAccess'
+import { Lock } from 'lucide-react'
 
 export default async function DashboardPage() {
+    const planAccess = await getPlanAccess()
     const data = await getDashboardData()
     const { user, communityName, communityType, announcements, polls, events, stats, userVotes, userRsvps, health } = data
     const isAdmin = user.role === 'admin'
@@ -34,13 +36,16 @@ export default async function DashboardPage() {
                 </div>
 
                 {isAdmin && health && (
-                    <Card className="bg-white border-slate-200 shadow-sm mb-8">
+                    <Card className={`bg-white border-slate-200 shadow-sm mb-8 relative overflow-hidden ${!planAccess?.canSeeHealthScore ? 'opacity-60 pointer-events-none' : ''}`}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg font-semibold flex items-center justify-between">
                                 Community Health Score
-                                <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full ${health.color.replace('text-', 'bg-').replace('-500', '-100')} ${health.color}`}>
-                                    {health.label}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    {!planAccess?.canSeeHealthScore && <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade to Pro</span>}
+                                    <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full ${health.color.replace('text-', 'bg-').replace('-500', '-100')} ${health.color}`}>
+                                        {health.label}
+                                    </span>
+                                </div>
                             </CardTitle>
                             <CardDescription>{health.insight}</CardDescription>
                         </CardHeader>
@@ -94,7 +99,7 @@ export default async function DashboardPage() {
 
                     <Card className="hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                            <CardTitle className="text-sm font-medium text-slate-500 capitalize">{terms.fees}</CardTitle>
+                            <CardTitle className="text-sm font-medium text-slate-500">Dues Collection</CardTitle>
                             <Coins className="h-4 w-4 text-amber-500" />
                         </CardHeader>
                         <CardContent>
@@ -109,7 +114,7 @@ export default async function DashboardPage() {
                                     />
                                 </div>
                                 <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
-                                    {stats.paidCount} of {stats.totalCount} paid
+                                    {stats.paidCount} of {stats.totalCount} Members Paid
                                 </p>
                             </div>
                         </CardContent>
@@ -119,9 +124,6 @@ export default async function DashboardPage() {
                 <div className="grid lg:grid-cols-2 gap-8">
                     {/* Left Column */}
                     <div className="space-y-8">
-                        {isAdmin && <IntelligencePanel />}
-                        <PersonalTodos />
-
                         {/* Announcements */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
@@ -243,6 +245,9 @@ export default async function DashboardPage() {
 
                     {/* Right Column */}
                     <div className="space-y-8">
+                        {isAdmin && <IntelligencePanel isLocked={!planAccess?.canSeeIntelligenceFeed} />}
+                        <PersonalTodos isLocked={!planAccess?.canSeePersonalTodos} />
+
                         {/* Events */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
@@ -310,8 +315,18 @@ export default async function DashboardPage() {
                         </div>
                     </div>
                 </div>
+                {/* SDG Connection */}
+                <div className="pt-8 border-t border-slate-100 flex flex-wrap items-center justify-center gap-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                        <span className="w-8 h-8 rounded bg-[#FD9D24] text-white flex items-center justify-center font-bold">11</span>
+                        Sustainable Cities & Communities
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                        <span className="w-8 h-8 rounded bg-[#00689D] text-white flex items-center justify-center font-bold">16</span>
+                        Peace, Justice & Strong Institutions
+                    </div>
+                </div>
             </div>
-            <AssistantPanel userRole={user.role as 'admin' | 'member'} />
         </div>
     );
 }

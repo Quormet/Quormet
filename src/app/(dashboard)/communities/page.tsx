@@ -110,13 +110,13 @@ export default function ExploreCommunitiesPage() {
                 </div>
 
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4 transition-all duration-300">
-                    {step === 1 && "Explore Communities"}
+                    {step === 1 && "Join Another Community"}
                     {step === 2 && path === 'create' && "Create your community"}
                     {step === 2 && path === 'join' && "Join your community"}
                     {step === 3 && "You're all set!"}
                 </h1>
                 <p className="text-lg text-slate-500 transition-all duration-300 h-8">
-                    {step === 1 && "Find a new community to join or start your own."}
+                    {step === 1 && "Create a new community or join an existing one with an invite code."}
                     {step === 2 && path === 'create' && "Give your community a name."}
                     {step === 2 && path === 'join' && "Enter your invite code or search by name."}
                 </p>
@@ -136,7 +136,7 @@ export default function ExploreCommunitiesPage() {
                             </div>
                             <h3 className="text-xl font-bold mb-2">Create a Community</h3>
                             <p className="text-slate-500 text-sm mb-6 flex-1">
-                                Set up a new workspace for your HOA or neighborhood. You will be the admin.
+                                Set up a new workspace for your community. You will be the admin.
                             </p>
                             <div className="flex items-center text-blue-600 font-medium text-sm mt-auto">
                                 Continue <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -152,7 +152,7 @@ export default function ExploreCommunitiesPage() {
                             </div>
                             <h3 className="text-xl font-bold mb-2">Join a Community</h3>
                             <p className="text-slate-500 text-sm mb-6 flex-1">
-                                Connect with your existing neighborhood using an invite code from your admin.
+                                Connect with your existing community using an invite code from your admin.
                             </p>
                             <div className="flex items-center text-emerald-600 font-medium text-sm mt-auto">
                                 Continue <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -288,7 +288,7 @@ export default function ExploreCommunitiesPage() {
                                 </div>
                                 <h2 className="text-2xl font-bold mb-2">Community created successfully!</h2>
                                 <p className="text-slate-500 mb-8 max-w-md">
-                                    You are now the admin. Share the code below with your neighbors so they can join.
+                                    You are now the admin. Share the code below with your members so they can join.
                                 </p>
 
                                 <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl w-full max-w-sm mb-8 relative group">
@@ -308,7 +308,7 @@ export default function ExploreCommunitiesPage() {
                                 </div>
 
                                 <Button size="lg" className="w-full h-14 text-base shadow-lg shadow-blue-200" onClick={() => router.push('/home')}>
-                                    Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                                    Go to your community <ArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </CardContent>
                         </Card>

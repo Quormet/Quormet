@@ -10,27 +10,29 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { updateIssueStatus } from '@/app/(dashboard)/issues/actions'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 
 const STATUSES = [
-  { value: 'submitted',        label: 'Submitted' },
-  { value: 'board_review',     label: 'Board Review' },
-  { value: 'vendor_assigned',  label: 'Vendor Assigned' },
-  { value: 'in_progress',      label: 'In Progress' },
-  { value: 'resolved',         label: 'Resolved' },
+  { value: 'submitted', label: 'Submitted' },
+  { value: 'board_review', label: 'Board Review' },
+  { value: 'vendor_assigned', label: 'Vendor Assigned' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
 ]
 
 export default function AdminStatusPanel({
   issueId,
   currentStatus,
   vendors,
-  currentVendorId
+  currentVendorId,
+  canAssignVendors = false,
 }: {
   issueId: string
   currentStatus: string
   vendors?: { id: string, name: string }[]
   currentVendorId?: string | null
+  canAssignVendors?: boolean
 }) {
   const [status, setStatus] = useState(currentStatus)
   const [vendorId, setVendorId] = useState(currentVendorId || 'unassigned')
@@ -71,8 +73,11 @@ export default function AdminStatusPanel({
 
       {status === 'vendor_assigned' || status === 'in_progress' || currentVendorId ? (
         <div className="space-y-2">
-          <label className="text-sm font-medium">Assign Vendor</label>
-          <Select value={vendorId} onValueChange={setVendorId}>
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium">Assign Vendor</label>
+            {!canAssignVendors && <span className="text-xs text-amber-600 flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade</span>}
+          </div>
+          <Select value={vendorId} onValueChange={setVendorId} disabled={!canAssignVendors}>
             <SelectTrigger>
               <SelectValue placeholder="Select a vendor..." />
             </SelectTrigger>

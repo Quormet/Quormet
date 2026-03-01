@@ -3,20 +3,26 @@ import { getCurrentUser } from '@/utils/getCurrentUser';
 import { buildSystemPrompt } from '@/utils/assistant/systemPrompt';
 import { getTools } from '@/utils/assistant/tools';
 import { executeTool } from '@/utils/assistant/executeTools';
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || process.env.gemini_api_key,
-});
+import { getPlanAccess } from '@/utils/planAccess';
 
 export async function POST(request: Request) {
   try {
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY || process.env.gemini_api_key || 'dummy_key',
+    });
+
     const user = await getCurrentUser();
     if (!user) return new Response('Unauthorized', { status: 401 });
+
+    const access = await getPlanAccess();
+    if (!access || !access.canUseAI) {
+      return new Response('AI feature requires an upgraded plan.', { status: 403 });
+    }
 
     const { messages } = await request.json();
 
     const systemPrompt = await buildSystemPrompt(user);
-    const tools = getTools(user.role as 'admin' | 'member');
+    const tools = getTools(access);
 
     let contents = messages.map((m: { role: string; content: string }) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
     }));
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents,
       config: {
         systemInstruction: systemPrompt,
@@ -59,7 +65,7 @@ export async function POST(request: Request) {
       });
 
       const finalResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash',
         contents,
         config: {
           systemInstruction: systemPrompt,
@@ -76,7 +82,7 @@ export async function POST(request: Request) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('Assistant Error:', msg);
     return new Response(
-      JSON.stringify({ message: 'Error communicating with Assistant.' }),
+      JSON.stringify({ message: `Error communicating with Assistant. Details: ${msg}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

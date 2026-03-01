@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { polls, votes, payments, issues, announcements, users } from "@/db/schema";
+import { polls, votes, payments, issues, announcements, users, communityMembers } from "@/db/schema";
 import { eq, count, and, desc, sql, gte } from "drizzle-orm";
 
 async function getPollParticipationRate(communityId: number): Promise<number> {
@@ -13,7 +13,7 @@ async function getPollParticipationRate(communityId: number): Promise<number> {
     if (!recentPoll) return 15; // default if no polls exist
 
     // Get total members in the community
-    const members = await db.select({ count: count() }).from(users).where(eq(users.communityId, communityId));
+    const members = await db.select({ count: count() }).from(communityMembers).where(eq(communityMembers.communityId, communityId));
     const totalMembers = members[0]?.count || 1;
 
     // Get votes for this poll
@@ -30,10 +30,10 @@ async function getPollParticipationRate(communityId: number): Promise<number> {
 }
 
 async function getDuesCollectionRate(communityId: number): Promise<number> {
-    const members = await db.select({ count: count() }).from(users).where(eq(users.communityId, communityId));
+    const members = await db.select({ count: count() }).from(communityMembers).where(eq(communityMembers.communityId, communityId));
     const totalMembers = members[0]?.count || 1;
 
-    const paidMembers = await db.select({ count: count() }).from(users).where(and(eq(users.communityId, communityId), eq(users.duesPaid, true)));
+    const paidMembers = await db.select({ count: count() }).from(communityMembers).where(and(eq(communityMembers.communityId, communityId), eq(communityMembers.duesPaid, true)));
     const totalPaid = paidMembers[0]?.count || 0;
 
     const rate = totalPaid / totalMembers;

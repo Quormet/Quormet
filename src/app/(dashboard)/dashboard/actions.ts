@@ -2,7 +2,7 @@
 
 import { getCurrentUser } from '@/utils/getCurrentUser'
 import { db } from '@/db'
-import { users, announcements, polls, events, votes, rsvps, communities } from '@/db/schema'
+import { users, announcements, polls, events, votes, rsvps, communities, communityMembers } from '@/db/schema'
 import { eq, desc, count, and, gte, isNull } from 'drizzle-orm'
 import { getCommunityHealth } from '@/utils/communityHealth'
 
@@ -49,12 +49,12 @@ export async function getDashboardData() {
             .orderBy(desc(events.startsAt))
             .limit(3),
 
-        db.select({ count: count() }).from(users)
-            .where(eq(users.communityId, communityId)),
+        db.select({ count: count() }).from(communityMembers)
+            .where(eq(communityMembers.communityId, communityId)),
 
-        db.select({ count: count(), paid: users.duesPaid }).from(users)
-            .where(eq(users.communityId, communityId))
-            .groupBy(users.duesPaid),
+        db.select({ count: count(), paid: communityMembers.duesPaid }).from(communityMembers)
+            .where(eq(communityMembers.communityId, communityId))
+            .groupBy(communityMembers.duesPaid),
 
         db.select().from(votes).where(eq(votes.userId, user.id)),
         db.select().from(rsvps).where(eq(rsvps.userId, user.id))

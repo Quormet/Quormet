@@ -1,4 +1,0 @@
-﻿src/app/(dashboard)/polls/page.tsx(80,41): error TS2322: Type '{ id: number; communityId: number; authorId: number; question: string; options: unknown; endsAt: Date | null; createdAt: Date; }' is not assignable to type '{ id: number; question: string; options: string[] | null; endsAt: Date | null; }'.
-  Types of property 'options' are incompatible.
-    Type 'unknown' is not assignable to type 'string[] | null'.
-src/app/(dashboard)/polls/poll-card-client.tsx(6,26): error TS2307: Cannot find module '@/components/ui/progress' or its corresponding type declarations.

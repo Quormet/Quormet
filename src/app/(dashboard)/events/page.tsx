@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { db } from "@/db";
-import { users, events, rsvps } from "@/db/schema";
+import { events, rsvps, users } from "@/db/schema";
 import { eq, desc, inArray, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -12,11 +12,7 @@ import { EventActions } from "./event-actions";
 import { format } from "date-fns";
 
 export default async function EventsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/sign-in");
-
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
+    const dbUser = await getCurrentUser();
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
 
 
@@ -46,7 +42,7 @@ export default async function EventsPage() {
         <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Events Planner</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Events</h1>
                     <p className="text-slate-500 mt-1">Upcoming gatherings, meetings, and block parties.</p>
                 </div>
 

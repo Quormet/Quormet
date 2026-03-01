@@ -9,6 +9,7 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { users, polls, votes, announcements } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getPlanAccess } from "@/utils/planAccess";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -61,7 +62,9 @@ export async function submitVote(pollId: number, optionIndex: number) {
         throw new Error("Invalid poll");
     }
 
-    if (poll.endsAt && new Date(poll.endsAt) < new Date()) {
+    const planAccess = await getPlanAccess();
+    const isCommunity = planAccess?.isCommunity ?? false;
+    if (isCommunity && poll.endsAt && new Date(poll.endsAt) < new Date()) {
         throw new Error("This poll is closed");
     }
 
@@ -98,38 +101,41 @@ export async function closePoll(pollId: number) {
         .set({ endsAt: new Date() })
         .where(eq(polls.id, pollId));
 
-    // Auto-draft a results announcement for the admin to review
-    const pollVotes = await db.select().from(votes).where(eq(votes.pollId, pollId));
+    const planAccess = await getPlanAccess();
+    if (planAccess?.isPro) {
+        // Auto-draft a results announcement for the admin to review
+        const pollVotes = await db.select().from(votes).where(eq(votes.pollId, pollId));
 
-    // Calculate winner
-    const optionsArray = poll.options as { text: string }[];
-    const voteCounts = new Array(optionsArray.length).fill(0);
-    pollVotes.forEach(v => {
-        if (v.optionIndex >= 0 && v.optionIndex < voteCounts.length) {
-            voteCounts[v.optionIndex]++;
-        }
-    });
+        // Calculate winner
+        const optionsArray = poll.options as { text: string }[];
+        const voteCounts = new Array(optionsArray.length).fill(0);
+        pollVotes.forEach(v => {
+            if (v.optionIndex >= 0 && v.optionIndex < voteCounts.length) {
+                voteCounts[v.optionIndex]++;
+            }
+        });
 
-    let winningIndex = 0;
-    let maxVotes = 0;
-    for (let i = 0; i < voteCounts.length; i++) {
-        if (voteCounts[i] > maxVotes) {
-            maxVotes = voteCounts[i];
-            winningIndex = i;
+        let winningIndex = 0;
+        let maxVotes = 0;
+        for (let i = 0; i < voteCounts.length; i++) {
+            if (voteCounts[i] > maxVotes) {
+                maxVotes = voteCounts[i];
+                winningIndex = i;
+            }
         }
+
+        const totalVotes = pollVotes.length;
+        const winnerOption = optionsArray[winningIndex]?.text || "Unknown";
+        const percentage = totalVotes > 0 ? Math.round((maxVotes / totalVotes) * 100) : 0;
+
+        await db.insert(announcements).values({
+            communityId: poll.communityId,
+            authorId: user.id,
+            title: `Poll Results: ${poll.question}`,
+            body: `The community has voted. "${winnerOption}" won with ${percentage}% of votes (${maxVotes} of ${totalVotes} members). Thank you to everyone who participated.`,
+            isDraft: true, // admin must approve before it goes live
+        });
     }
-
-    const totalVotes = pollVotes.length;
-    const winnerOption = optionsArray[winningIndex]?.text || "Unknown";
-    const percentage = totalVotes > 0 ? Math.round((maxVotes / totalVotes) * 100) : 0;
-
-    await db.insert(announcements).values({
-        communityId: poll.communityId,
-        authorId: user.id,
-        title: `Poll Results: ${poll.question}`,
-        body: `The community has voted. "${winnerOption}" won with ${percentage}% of votes (${maxVotes} of ${totalVotes} members). Thank you to everyone who participated.`,
-        isDraft: true, // admin must approve before it goes live
-    });
 
     revalidatePath("/polls");
 }

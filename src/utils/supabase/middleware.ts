@@ -39,6 +39,9 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/onboarding') ||
         request.nextUrl.pathname.startsWith('/announcements') ||
         request.nextUrl.pathname.startsWith('/payments') ||
+        request.nextUrl.pathname.startsWith('/fees') ||
+        request.nextUrl.pathname.startsWith('/dues') ||
+        request.nextUrl.pathname.startsWith('/help') ||
         request.nextUrl.pathname.startsWith('/events') ||
         request.nextUrl.pathname.startsWith('/polls') ||
         request.nextUrl.pathname.startsWith('/directory') ||

@@ -13,6 +13,11 @@ export const communities = pgTable('communities', {
     communityType: varchar('community_type', { length: 50 }).notNull().default('default'),
     duesAmount: integer('dues_amount').notNull().default(0),
     duesPeriod: text('dues_period').notNull().default('monthly'),
+    plan: text('plan').notNull().default('free'), // 'free' | 'community' | 'pro' | 'scale'
+    planMemberLimit: integer('plan_member_limit').default(20),
+    stripeCustomerId: text('stripe_customer_id'),
+    stripeSubscriptionId: text('stripe_subscription_id'),
+    planExpiresAt: timestamp('plan_expires_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -27,8 +32,10 @@ export const users = pgTable('users', {
     address: text('address'),
     phone: text('phone'),
     directoryOptIn: boolean('directory_opt_in').notNull().default(false),
-    duesPaid: boolean('dues_paid').notNull().default(false),
     skills: text('skills').array(),
+    individualPlan: text('individual_plan').default('free'), // 'free' | 'member_pro'
+    individualPlanExpiresAt: timestamp('individual_plan_expires_at'),
+    individualStripeSubscriptionId: text('individual_stripe_subscription_id'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -38,6 +45,7 @@ export const communityMembers = pgTable('community_members', {
     userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     communityId: integer('community_id').notNull().references(() => communities.id, { onDelete: 'cascade' }),
     role: text('role').notNull().default('member'), // 'admin' | 'member'
+    duesPaid: boolean('dues_paid').notNull().default(false),
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
 }, (t) => ({
     uniq: unique().on(t.userId, t.communityId),

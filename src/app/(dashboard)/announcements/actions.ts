@@ -39,17 +39,23 @@ export async function createAnnouncement(formData: FormData) {
     const title = formData.get("title") as string;
     const body = formData.get("body") as string;
 
+    // Fallback to active community cookie if needed
+    const cookieStore = await cookies();
+    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
+    const communityId = activeCookieVal ? parseInt(activeCookieVal) : user.communityId;
+
+    if (!communityId) throw new Error("Community context is required");
     if (!title || !body) throw new Error("Title and body are required");
 
     await db.insert(announcements).values({
-        communityId: user.communityId!,
+        communityId: communityId,
         authorId: user.id,
         title,
         body,
     });
 
     revalidatePath("/announcements");
-    redirect("/announcements");
+    return { success: true };
 }
 
 export async function deleteAnnouncement(id: number) {

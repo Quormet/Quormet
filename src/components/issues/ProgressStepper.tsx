@@ -28,8 +28,8 @@ export default function ProgressStepper({
         updates.find(u => u.newStatus === stageKey)?.createdAt
 
     return (
-        <div className="w-full py-6">
-            <div className="flex items-center justify-between relative">
+        <div className="w-full py-6 overflow-x-auto">
+            <div className="flex items-center justify-between relative min-w-[600px] px-4">
                 {/* Connecting line */}
                 <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted" />
                 <div

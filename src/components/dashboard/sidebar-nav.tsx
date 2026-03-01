@@ -21,8 +21,7 @@ const allNavItems = [
     { name: "Directory", href: "/directory", icon: Users },
     { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Issues", href: "/issues", icon: ClipboardList },
-    { name: "Help Board", href: "/board", icon: HandHelping },
-    { name: "Explore Communities", href: "/communities", icon: Search },
+    { name: "Community Board", href: "/board", icon: HandHelping },
 ];
 
 type Membership = {
@@ -45,6 +44,7 @@ export function SidebarNav({
     activeCommunityId,
     memberships = [],
     communities = [],
+    notifs = {},
 }: {
     role: string;
     communityName: string;
@@ -54,6 +54,7 @@ export function SidebarNav({
     activeCommunityId?: number;
     memberships?: Membership[];
     communities?: Community[];
+    notifs?: Record<string, number>;
 }) {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
@@ -141,6 +142,7 @@ export function SidebarNav({
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-2 mt-6">Menu</p>
             {navItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                const dotCount = notifs[item.href] ?? 0;
                 return (
                     <Link
                         key={item.name}
@@ -151,8 +153,13 @@ export function SidebarNav({
                             : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                             }`}
                     >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="flex-1">{item.name}</span>
+                        {dotCount > 0 && (
+                            <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-bold px-1">
+                                {dotCount > 9 ? '9+' : dotCount}
+                            </span>
+                        )}
                     </Link>
                 );
             })}
@@ -199,6 +206,9 @@ export function SidebarNav({
                                     Sign Out
                                 </button>
                             </form>
+                            <div className="mt-4 px-2 text-[10px] text-slate-400 leading-tight">
+                                Proudly supporting UN SDG 11 & 16.
+                            </div>
                         </div>
                     </SheetContent>
                 </Sheet>
@@ -219,11 +229,14 @@ export function SidebarNav({
                 <div className="border-t flex flex-col p-4 shrink-0 bg-slate-50/50">
                     {renderUserMenu()}
                     <form action={signOut}>
-                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors px-2">
+                        <button type="submit" className="flex items-center gap-2 text-xs text-slate-500 hover:text-red-600 transition-colors px-2 mt-2">
                             <LogOut className="h-3 w-3" />
                             Sign Out
                         </button>
                     </form>
+                    <div className="mt-4 px-2 text-[10px] text-slate-400 leading-tight">
+                        Proudly supporting UN SDG 11 & 16.
+                    </div>
                 </div>
             </aside>
         </>

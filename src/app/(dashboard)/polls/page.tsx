@@ -1,7 +1,8 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { db } from "@/db";
-import { users, polls, votes } from "@/db/schema";
+import { polls, votes, communityMembers } from "@/db/schema";
 import { eq, desc, inArray } from "drizzle-orm";
+import { getPlanAccess } from "@/utils/planAccess";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,15 @@ import PollCardClient from "./poll-card-client";
 import { PollActions } from "./poll-actions";
 
 export default async function PollsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/sign-in");
-
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
+    const dbUser = await getCurrentUser();
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
+
+    const planAccess = await getPlanAccess();
+    const canSeeQuorumBar = planAccess?.canSeeQuorumBar ?? false;
+    const isCommunity = planAccess?.isCommunity ?? false;
+
+    const membersList = await db.select().from(communityMembers).where(eq(communityMembers.communityId, dbUser.communityId));
+    const memberCount = membersList.length;
 
     // Fetch all polls in community
     const allPolls = await db.select()
@@ -72,7 +76,7 @@ export default async function PollsPage() {
                         });
                         const totalVotes = pollVotes.length;
 
-                        const isClosed = poll.endsAt ? new Date(poll.endsAt) < new Date() : false;
+                        const isClosed = (isCommunity && poll.endsAt) ? new Date(poll.endsAt) < new Date() : false;
 
                         return (
                             <Card key={poll.id} className="overflow-hidden">
@@ -90,6 +94,9 @@ export default async function PollsPage() {
                                         isAdmin={dbUser.role === "admin"}
                                         voteCounts={voteCounts}
                                         totalVotes={totalVotes}
+                                        canSeeQuorumBar={canSeeQuorumBar}
+                                        memberCount={memberCount}
+                                        isClosed={isClosed}
                                     />
                                 </CardContent>
                             </Card>

@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { users, documents, communityMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getPlanAccess } from "@/utils/planAccess";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -32,6 +33,9 @@ export async function addDocument(formData: FormData) {
     const user = await getAuthUser();
     if (user.role !== "admin") throw new Error("Only admins can upload documents");
 
+    const planAccess = await getPlanAccess();
+    if (!planAccess?.canManageDocuments) throw new Error("Your plan does not support adding documents");
+
     const name = formData.get("name") as string;
     const category = formData.get("category") as string || "general";
     const fileUrl = formData.get("fileUrl") as string;
@@ -52,6 +56,9 @@ export async function addDocument(formData: FormData) {
 export async function deleteDocument(id: number) {
     const user = await getAuthUser();
     if (user.role !== "admin") throw new Error("Only admins can delete documents");
+
+    const planAccess = await getPlanAccess();
+    if (!planAccess?.canManageDocuments) throw new Error("Your plan does not support deleting documents");
 
     await db.delete(documents).where(and(
         eq(documents.id, id),

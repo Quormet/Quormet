@@ -1,6 +1,6 @@
 import { getPersonalTodos } from '@/utils/intelligence/getPersonalTodos'
 import { getCurrentUser } from '@/utils/getCurrentUser'
-import { CheckCircle2, Vote, Calendar, DollarSign } from 'lucide-react'
+import { CheckCircle2, Vote, Calendar, DollarSign, Lock } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -18,15 +18,18 @@ const URGENCY_DOT = {
     low: 'bg-blue-400',
 }
 
-export default async function PersonalTodos() {
+export default async function PersonalTodos({ isLocked }: { isLocked?: boolean }) {
     const user = await getCurrentUser()
     if (!user?.communityId) return null
 
     const todos = await getPersonalTodos(user.id, user.communityId)
 
     return (
-        <Card className="p-4 space-y-3">
-            <h3 className="font-semibold text-sm">Your Action Items</h3>
+        <Card className={`p-4 space-y-3 ${isLocked ? 'opacity-60 pointer-events-none' : ''}`}>
+            <h3 className="font-semibold text-sm flex justify-between items-center">
+                Your Action Items
+                {isLocked && <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade</span>}
+            </h3>
 
             {todos.length === 0 ? (
                 <div className="flex items-center gap-2 py-2 text-muted-foreground">

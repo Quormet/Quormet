@@ -1,25 +1,28 @@
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { users, communities, payments } from "@/db/schema";
+import { users, communities, payments, communityMembers } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink, BrainCircuit } from "lucide-react";
+import { Coins, CheckCircle2, Clock, AlertCircle, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { createCheckoutSession, updateCommunityDues, markUserPaid } from "./actions";
-import { WolframAnalytics } from "./wolfram_analytics";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { getTerms } from "@/utils/communityTerms";
+import { getPlanAccess } from "@/utils/planAccess";
+import { Lock } from "lucide-react";
 
 export default async function DuesPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/sign-in");
+    const dbUser = await getCurrentUser();
 
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
+
+    const planAccess = await getPlanAccess();
+    const canManageDues = planAccess?.canManageDues ?? false;
+    const canSeeAnalytics = planAccess?.isPro && dbUser.role === 'admin';
 
     const [community] = await db.select().from(communities).where(eq(communities.id, dbUser.communityId)).limit(1);
 
@@ -30,9 +33,21 @@ export default async function DuesPage() {
         .orderBy(desc(payments.paidAt));
 
 
-    let allMembers: typeof users.$inferSelect[] = [];
+    let allMembers: (typeof users.$inferSelect & { duesPaid: boolean })[] = [];
     if (dbUser.role === "admin") {
-        allMembers = await db.select().from(users).where(eq(users.communityId, dbUser.communityId));
+        const membersData = await db
+            .select({
+                user: users,
+                membership: communityMembers,
+            })
+            .from(users)
+            .innerJoin(communityMembers, eq(users.id, communityMembers.userId))
+            .where(eq(communityMembers.communityId, dbUser.communityId));
+
+        allMembers = membersData.map(d => ({
+            ...d.user,
+            duesPaid: d.membership.duesPaid,
+        }));
     }
 
     const duesAmountDollars = (community.duesAmount / 100).toFixed(2);
@@ -73,12 +88,20 @@ export default async function DuesPage() {
                                         <p className="text-xs text-emerald-600">You are all caught up for this period.</p>
                                     </div>
                                 </>
-                            ) : (
+                            ) : duesConfigured ? (
                                 <>
                                     <AlertCircle className="h-6 w-6 text-red-600" />
                                     <div>
                                         <p className="font-semibold text-red-800">Payment Required</p>
                                         <p className="text-xs text-red-600">Your {duesLabel.toLowerCase()} for this period are unpaid.</p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 className="h-6 w-6 text-slate-400" />
+                                    <div>
+                                        <p className="font-semibold text-slate-700">No payment required</p>
+                                        <p className="text-xs text-slate-500">Your admin has not set a {duesLabel.toLowerCase()} amount yet.</p>
                                     </div>
                                 </>
                             )}
@@ -132,10 +155,13 @@ export default async function DuesPage() {
                 {dbUser.role === "admin" && (
                     <>
                         {/* Admin: Config */}
-                        <Card className="md:col-span-2 border-slate-300 shadow-sm relative overflow-hidden">
+                        <Card className={`md:col-span-2 border-slate-300 shadow-sm relative overflow-hidden ${!canManageDues ? 'opacity-60 pointer-events-none' : ''}`}>
                             <div className="absolute top-0 right-0 bg-slate-800 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">ADMIN VIEW</div>
                             <CardHeader className="pt-6">
-                                <CardTitle>Configure Community {duesLabelCapitalized}</CardTitle>
+                                <CardTitle className="flex justify-between items-center">
+                                    Configure Community {duesLabelCapitalized}
+                                    {!canManageDues && <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade</span>}
+                                </CardTitle>
                                 <CardDescription>Set the amount and frequency of {duesLabel.toLowerCase()} for your community members.</CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -157,27 +183,13 @@ export default async function DuesPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Wolfram Award Section */}
-                        <Card className="md:col-span-2 border-purple-200 bg-purple-50/30">
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <BrainCircuit className="h-5 w-5 text-purple-600" />
-                                    <CardTitle className="text-purple-900">Wolfram Finance Intelligence</CardTitle>
-                                    <span className="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">WOLFRAM AWARD</span>
-                                </div>
-                                <CardDescription className="text-purple-700">
-                                    Leverage Wolfram Alpha's computational engine to analyze community financial health.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <WolframAnalytics payments={userPayments} communityName={community.name} />
-                            </CardContent>
-                        </Card>
-
                         {/* Admin: Member Status List */}
-                        <Card className="md:col-span-2">
+                        <Card className={`md:col-span-2 ${!canManageDues ? 'opacity-60 pointer-events-none' : ''}`}>
                             <CardHeader>
-                                <CardTitle>Member {duesLabelCapitalized} Status</CardTitle>
+                                <CardTitle className="flex justify-between items-center">
+                                    Member {duesLabelCapitalized} Status
+                                    {!canManageDues && <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade</span>}
+                                </CardTitle>
                                 <CardDescription>Track who has paid and manually override statuses for cash/check payments.</CardDescription>
                             </CardHeader>
                             <CardContent>

@@ -62,7 +62,7 @@ export default function ReportIssueModal() {
                 <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                     <div className="space-y-2">
                         <Label htmlFor="title">Title</Label>
-                        <Input id="title" name="title" placeholder="Short description" required />
+                        <Input id="title" name="title" placeholder="Short description" minLength={10} required />
                     </div>
 
                     <div className="space-y-2">
@@ -93,6 +93,7 @@ export default function ReportIssueModal() {
                             name="description"
                             placeholder="Describe the issue in detail..."
                             rows={4}
+                            minLength={10}
                             required
                         />
                     </div>

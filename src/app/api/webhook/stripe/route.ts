@@ -1,61 +1,109 @@
-/**
- * Handles incoming Stripe webhook events, specifically the 'checkout.session.completed' 
- * event to record user payments and update their dues status in the database.
- */
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import { db } from "@/db";
-import { users, payments } from "@/db/schema";
+import { communities, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
 export async function POST(req: Request) {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: "2024-06-20",
-    } as any);
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key', {
+        apiVersion: "2026-02-25.clover" as any,
+    });
+
+    const body = await req.text();
+    const signature = (await headers()).get("Stripe-Signature") as string;
+
+    let event: Stripe.Event;
 
     try {
-        const body = await req.text();
-        const headersList = await headers();
-        const signature = headersList.get("stripe-signature");
-
-        if (!signature || !webhookSecret) {
-            return new NextResponse("Missing Stripe configuration", { status: 400 });
-        }
-
-        let event: Stripe.Event;
-
-        try {
-            event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-        } catch (err: any) {
-            return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
-        }
-
-        if (event.type === "checkout.session.completed") {
-            const session = event.data.object as Stripe.Checkout.Session;
-
-            const userIdStr = session.metadata?.userId;
-            const communityIdStr = session.metadata?.communityId;
-
-            if (userIdStr && communityIdStr) {
-                const userId = parseInt(userIdStr);
-                const communityId = parseInt(communityIdStr);
-
-                await db.insert(payments).values({
-                    userId,
-                    communityId,
-                    amount: session.amount_total || 0,
-                    stripeSessionId: session.id,
-                });
-
-                await db.update(users).set({ duesPaid: true }).where(eq(users.id, userId));
-            }
-        }
-
-        return new NextResponse(null, { status: 200 });
-    } catch (err: any) {
-        return new NextResponse(`Server Error: ${err.message}`, { status: 500 });
+        event = stripe.webhooks.constructEvent(
+            body,
+            signature,
+            process.env.STRIPE_WEBHOOK_SECRET!
+        );
+    } catch (error: any) {
+        console.error(`Webhook Error: ${error.message}`);
+        return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
     }
+
+    const session = event.data.object as any;
+
+    if (event.type === "checkout.session.completed") {
+        const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+        );
+
+        if (subscription.metadata?.plan === "community") {
+            const communityId = parseInt(subscription.metadata.communityId);
+
+            await db.update(communities)
+                .set({
+                    plan: "community",
+                    stripeSubscriptionId: subscription.id,
+                    stripeCustomerId: subscription.customer as string,
+                    planExpiresAt: new Date((subscription as any).current_period_end * 1000),
+                    planMemberLimit: 100,
+                })
+                .where(eq(communities.id, communityId));
+        } else if (subscription.metadata?.plan === "member_pro") {
+            const userId = parseInt(subscription.metadata.userId);
+
+            await db.update(users)
+                .set({
+                    individualPlan: "member_pro",
+                    individualStripeSubscriptionId: subscription.id,
+                    individualPlanExpiresAt: new Date((subscription as any).current_period_end * 1000),
+                })
+                .where(eq(users.id, userId));
+        }
+    }
+
+    if (event.type === "invoice.payment_succeeded") {
+        const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+        );
+
+        if (subscription.metadata?.plan === "community") {
+            const communityId = parseInt(subscription.metadata.communityId);
+            await db.update(communities)
+                .set({
+                    planExpiresAt: new Date((subscription as any).current_period_end * 1000),
+                })
+                .where(eq(communities.id, communityId));
+        } else if (subscription.metadata?.plan === "member_pro") {
+            const userId = parseInt(subscription.metadata.userId);
+            await db.update(users)
+                .set({
+                    individualPlanExpiresAt: new Date((subscription as any).current_period_end * 1000),
+                })
+                .where(eq(users.id, userId));
+        }
+    }
+
+    if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.updated") {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        if (subscription.metadata?.plan === "community") {
+            const communityId = parseInt(subscription.metadata.communityId);
+
+            await db.update(communities)
+                .set({
+                    plan: subscription.status === "active" ? "community" : "free",
+                    planExpiresAt: new Date((subscription as any).current_period_end * 1000),
+                    planMemberLimit: subscription.status === "active" ? 100 : 20,
+                })
+                .where(eq(communities.id, communityId));
+        } else if (subscription.metadata?.plan === "member_pro") {
+            const userId = parseInt(subscription.metadata.userId);
+
+            await db.update(users)
+                .set({
+                    individualPlan: subscription.status === "active" ? "member_pro" : "free",
+                    individualPlanExpiresAt: new Date((subscription as any).current_period_end * 1000),
+                })
+                .where(eq(users.id, userId));
+        }
+    }
+
+    return new NextResponse(null, { status: 200 });
 }

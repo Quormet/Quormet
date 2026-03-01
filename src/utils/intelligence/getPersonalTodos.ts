@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { polls, votes, events, rsvps, payments } from '@/db/schema'
+import { polls, votes, events, rsvps, payments, communities } from '@/db/schema'
 import { eq, and, gt } from 'drizzle-orm'
 import { format } from 'date-fns'
 
@@ -71,13 +71,14 @@ export async function getPersonalTodos(userId: number, communityId: number): Pro
     }
 
     // Unpaid dues
-    if (userPayment.length === 0) {
+    const [community] = await db.select().from(communities).where(eq(communities.id, communityId)).limit(1)
+    if (userPayment.length === 0 && community && community.duesAmount > 0) {
         todos.push({
             id: 'dues',
             type: 'unpaid_dues',
             title: 'Annual dues unpaid',
             description: 'Pay before the deadline to avoid late fees',
-            href: '/dues',
+            href: '/payments',
             urgency: 'high',
         })
     }
