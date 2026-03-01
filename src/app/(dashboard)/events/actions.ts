@@ -73,3 +73,17 @@ export async function submitRsvp(eventId: number, response: "yes" | "no") {
 
     revalidatePath("/events");
 }
+
+export async function deleteEvent(eventId: number) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can delete events");
+
+    // Drizzle with cascade should handle RSVPs, but just in case
+    await db.delete(rsvps).where(eq(rsvps.eventId, eventId));
+    await db.delete(events).where(and(
+        eq(events.id, eventId),
+        eq(events.communityId, user.communityId!)
+    ));
+
+    revalidatePath("/events");
+}

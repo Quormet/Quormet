@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Calendar, MapPin, Clock, Users } from "lucide-react";
 import { RsvpButtons } from "./rsvp-buttons";
+import { EventActions } from "./event-actions";
 import { format } from "date-fns";
 
 export default async function EventsPage() {
@@ -78,8 +79,11 @@ export default async function EventsPage() {
                         return (
                             <Card key={event.id} className={`flex flex-col relative overflow-hidden ${isPast ? 'opacity-70 grayscale' : ''}`}>
                                 <div className="h-2 w-full bg-blue-600 absolute top-0 left-0" />
+                                {dbUser.role === "admin" && (
+                                    <EventActions id={event.id} />
+                                )}
                                 <CardHeader>
-                                    <CardTitle className="text-xl leading-snug">{event.name}</CardTitle>
+                                    <CardTitle className="text-xl leading-snug pr-8">{event.name}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4 flex-1">
                                     <div className="space-y-2 text-sm text-slate-600">

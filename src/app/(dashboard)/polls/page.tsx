@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Vote as VoteIcon } from "lucide-react";
 import PollCardClient from "./poll-card-client";
+import { PollActions } from "./poll-actions";
 
 export default async function PollsPage() {
     const supabase = await createClient();
@@ -71,10 +72,15 @@ export default async function PollsPage() {
                         });
                         const totalVotes = pollVotes.length;
 
+                        const isClosed = poll.endsAt ? new Date(poll.endsAt) < new Date() : false;
+
                         return (
                             <Card key={poll.id} className="overflow-hidden">
-                                <CardHeader className="bg-slate-50/50 border-b pb-4">
+                                <CardHeader className="bg-slate-50/50 border-b pb-4 flex flex-row items-start justify-between">
                                     <CardTitle className="text-lg leading-snug">{poll.question}</CardTitle>
+                                    {dbUser.role === "admin" && (
+                                        <PollActions id={poll.id} isClosed={isClosed} />
+                                    )}
                                 </CardHeader>
                                 <CardContent className="p-6">
                                     <PollCardClient

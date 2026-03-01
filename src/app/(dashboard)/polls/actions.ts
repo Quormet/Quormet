@@ -82,3 +82,31 @@ export async function submitVote(pollId: number, optionIndex: number) {
 
     revalidatePath("/polls");
 }
+
+export async function closePoll(pollId: number) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can close polls");
+
+    await db.update(polls)
+        .set({ endsAt: new Date() })
+        .where(and(
+            eq(polls.id, pollId),
+            eq(polls.communityId, user.communityId!)
+        ));
+
+    revalidatePath("/polls");
+}
+
+export async function deletePoll(pollId: number) {
+    const user = await getAuthUser();
+    if (user.role !== "admin") throw new Error("Only admins can delete polls");
+
+    // Drizzle with cascade should handle votes, but just in case or if explicitly needed
+    await db.delete(votes).where(eq(votes.pollId, pollId));
+    await db.delete(polls).where(and(
+        eq(polls.id, pollId),
+        eq(polls.communityId, user.communityId!)
+    ));
+
+    revalidatePath("/polls");
+}

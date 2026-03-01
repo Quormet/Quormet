@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { FileText, Download, Trash2, PlusCircle } from "lucide-react";
 import { addDocument, deleteDocument } from "./actions";
 
+import { DeleteDocumentButton } from "./delete-button";
+
 export default async function DocumentsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -32,6 +34,15 @@ export default async function DocumentsPage() {
         .where(eq(documents.communityId, dbUser.communityId))
         .orderBy(desc(documents.createdAt));
 
+    const groupedDocs = allDocs.reduce((acc, doc) => {
+        const cat = doc.category || "General";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(doc);
+        return acc;
+    }, {} as Record<string, typeof allDocs>);
+
+    const categories = Object.keys(groupedDocs).sort();
+
     return (
         <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto w-full">
             <div>
@@ -40,9 +51,9 @@ export default async function DocumentsPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 items-start">
-                <div className="md:col-span-2 space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        {allDocs.length === 0 ? (
+                <div className="md:col-span-2 space-y-8">
+                    {allDocs.length === 0 ? (
+                        <div className="grid sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2 text-center py-16 px-4 bg-white border border-dashed rounded-lg">
                                 <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
                                     <FileText className="h-6 w-6" />
@@ -52,42 +63,42 @@ export default async function DocumentsPage() {
                                     Files uploaded by your admin will appear here securely.
                                 </p>
                             </div>
-                        ) : (
-                            allDocs.map((doc) => (
-                                <Card key={doc.id} className="flex flex-col">
-                                    <CardHeader className="p-4 pb-2">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-2 uppercase tracking-wider">
-                                                <FileText className="h-4 w-4" />
-                                                {doc.category}
-                                            </div>
-                                            {dbUser.role === "admin" && (
-                                                <form action={async () => {
-                                                    "use server";
-                                                    await deleteDocument(doc.id);
-                                                }}>
-                                                    <Button type="submit" variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-600 -mt-1 -mr-1">
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </form>
-                                            )}
-                                        </div>
-                                        <CardTitle className="text-base line-clamp-2" title={doc.name}>{doc.name}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-4 pt-0 text-xs text-slate-500 flex-1">
-                                        Uploaded by {doc.uploaderName} • {new Date(doc.createdAt).toLocaleDateString()}
-                                    </CardContent>
-                                    <CardFooter className="p-4 pt-0 mt-auto">
-                                        <Button variant="outline" size="sm" className="w-full bg-slate-50" asChild>
-                                            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                                                <Download className="mr-2 h-4 w-4" /> View / Download
-                                            </a>
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            ))
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        categories.map((category) => (
+                            <div key={category} className="space-y-4">
+                                <h2 className="text-xl font-semibold tracking-tight border-b pb-2">{category}</h2>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {groupedDocs[category].map((doc) => (
+                                        <Card key={doc.id} className="flex flex-col">
+                                            <CardHeader className="p-4 pb-2">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-2 uppercase tracking-wider">
+                                                        <FileText className="h-4 w-4" />
+                                                        {doc.category}
+                                                    </div>
+                                                    {dbUser.role === "admin" && (
+                                                        <DeleteDocumentButton id={doc.id} />
+                                                    )}
+                                                </div>
+                                                <CardTitle className="text-base line-clamp-2" title={doc.name}>{doc.name}</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-4 pt-0 text-xs text-slate-500 flex-1">
+                                                Uploaded by {doc.uploaderName} • {new Date(doc.createdAt).toLocaleDateString()}
+                                            </CardContent>
+                                            <CardFooter className="p-4 pt-0 mt-auto">
+                                                <Button variant="outline" size="sm" className="w-full bg-slate-50" asChild>
+                                                    <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="mr-2 h-4 w-4" /> View / Download
+                                                    </a>
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {dbUser.role === "admin" && (

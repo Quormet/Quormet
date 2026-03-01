@@ -18,7 +18,7 @@ declare global {
     var postgresClient: ReturnType<typeof postgres> | undefined;
 }
 
-const client = global.postgresClient || postgres(connectionString);
+const client = global.postgresClient || postgres(connectionString, { max: 1 });
 
 if (process.env.NODE_ENV !== 'production') {
     global.postgresClient = client;
