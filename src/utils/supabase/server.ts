@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 export async function createClient() {
     const cookieStore = await cookies()
 
-    return createServerClient(
+    const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
@@ -26,4 +26,29 @@ export async function createClient() {
             },
         }
     )
+
+    // Proxy the auth object to inject a mock user if demo mode is active
+    const isDemoMode = cookieStore.get('quormet_demo_mode')?.value === 'true';
+    if (isDemoMode) {
+        const demoUser = {
+            id: 'demo-user-id',
+            email: 'demo@example.com',
+            user_metadata: { full_name: 'Demo User' },
+        };
+
+        return new Proxy(supabase, {
+            get(target: any, prop) {
+                if (prop === 'auth') {
+                    return {
+                        ...target.auth,
+                        getUser: async () => ({ data: { user: demoUser }, error: null }),
+                        getSession: async () => ({ data: { session: { user: demoUser } }, error: null }),
+                    };
+                }
+                return target[prop];
+            }
+        });
+    }
+
+    return supabase;
 }

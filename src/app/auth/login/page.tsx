@@ -23,6 +23,16 @@ export default function LoginPage() {
         }
     }
 
+    async function handleDemoLogin() {
+        setIsLoading(true)
+        try {
+            await signInAsDemo()
+        } catch (error: any) {
+            toast.error(error.message)
+            setIsLoading(false)
+        }
+    }
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
             <Card className="w-full max-w-md">

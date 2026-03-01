@@ -2,7 +2,10 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
+import { db } from '@/db'
+import { communities, users } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 
 export async function signUp(formData: FormData) {
     const supabase = await createClient()
@@ -77,72 +80,50 @@ export async function signInWithOAuth(provider: 'google' | 'github') {
 export async function signOut() {
     const supabase = await createClient()
     await supabase.auth.signOut()
+
+    // Clear demo mode cookie
+    const cookieStore = await cookies()
+    cookieStore.delete('quormet_demo_mode')
+
     revalidatePath('/', 'layout')
     return redirect('/')
 }
 
 export async function signInAsDemo() {
-    const supabase = await createClient()
-    const email = 'demo@example.com'
-    const password = 'demo-password-123'
-
-    // Try signing in
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+    const cookieStore = await cookies()
+    cookieStore.set('quormet_demo_mode', 'true', {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24, // 24 hours
     })
 
-    if (signInError) {
-        // If sign in fails, try signing up
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: 'Demo User',
-                },
-            },
-        })
+    const demoUserId = 'demo-user-id'
+    const demoEmail = 'demo@example.com'
 
-        if (signUpError) throw new Error(signUpError.message)
-
-        // Use the user from sign up or wait for them to confirm if setting not yet applied
-        const user = signUpData.user
-        if (!user) throw new Error("Could not create demo user")
-
-        // Ensure demo community exists
-        let demoCommunity = (await db.select().from(communities).where(eq(communities.name, 'Demo Community')).limit(1))[0]
-        if (!demoCommunity) {
-            demoCommunity = (await db.insert(communities).values({
-                name: 'Demo Community',
-                joinCode: 'DEMO12',
-            }).returning())[0]
-        }
-
-        // Upsert user into our DB
-        await db.insert(users).values({
-            supabaseId: user.id,
-            name: 'Demo User',
-            email: email,
-            role: 'admin',
-            communityId: demoCommunity.id,
-        }).onConflictDoUpdate({
-            target: users.supabaseId,
-            set: {
-                communityId: demoCommunity.id,
-                role: 'admin',
-            }
-        })
-
-        // If no session was created, we need to sign in again after sign up
-        if (!signUpData.session) {
-            const { error: secondSignInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            })
-            if (secondSignInError) throw new Error(secondSignInError.message)
-        }
+    // Ensure demo community exists
+    let demoCommunity = (await db.select().from(communities).where(eq(communities.name, 'Demo Community')).limit(1))[0]
+    if (!demoCommunity) {
+        demoCommunity = (await db.insert(communities).values({
+            name: 'Demo Community',
+            joinCode: 'DEMO12',
+        }).returning())[0]
     }
+
+    // Upsert user into our DB
+    await db.insert(users).values({
+        supabaseId: demoUserId,
+        name: 'Demo User',
+        email: demoEmail,
+        role: 'admin',
+        communityId: demoCommunity.id,
+    }).onConflictDoUpdate({
+        target: users.supabaseId,
+        set: {
+            communityId: demoCommunity.id,
+            role: 'admin',
+        }
+    })
 
     revalidatePath('/', 'layout')
     return redirect('/dashboard')

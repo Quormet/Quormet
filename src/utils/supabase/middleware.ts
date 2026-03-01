@@ -32,7 +32,6 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // Protect dashboard and onboarding routes
     const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') ||
         request.nextUrl.pathname.startsWith('/onboarding') ||
         request.nextUrl.pathname.startsWith('/announcements') ||
@@ -42,7 +41,9 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/directory') ||
         request.nextUrl.pathname.startsWith('/documents');
 
-    if (!user && isProtectedRoute) {
+    const isDemoMode = request.cookies.get('quormet_demo_mode')?.value === 'true';
+
+    if (!user && isProtectedRoute && !isDemoMode) {
         return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 
