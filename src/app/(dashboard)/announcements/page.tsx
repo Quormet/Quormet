@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/utils/getCurrentUser";
 import { db } from "@/db";
 import { users, announcements } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -12,11 +12,7 @@ import { ApproveAnnouncementButton } from "./approve-button";
 import { cn } from "@/lib/utils";
 
 export default async function AnnouncementsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/auth/login");
-
-    const [dbUser] = await db.select().from(users).where(eq(users.supabaseId, user.id)).limit(1);
+    const dbUser = await getCurrentUser();
     if (!dbUser || !dbUser.communityId) redirect("/onboarding");
 
     // Fetch announcements with author details

@@ -52,8 +52,8 @@ export default function ThreadView({ initialThread, currentUserId, partnerId, pa
                         return (
                             <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                                 <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${isMine
-                                        ? "bg-blue-600 text-white rounded-br-sm"
-                                        : "bg-white text-slate-800 border border-slate-200 rounded-bl-sm"
+                                    ? "bg-blue-600 text-white rounded-br-sm"
+                                    : "bg-white text-slate-800 border border-slate-200 rounded-bl-sm"
                                     }`}>
                                     <p className="whitespace-pre-wrap break-words">{m.body}</p>
                                     <p className={`text-[10px] mt-1 ${isMine ? "text-blue-200 text-right" : "text-slate-400"}`}>
@@ -77,6 +77,7 @@ export default function ThreadView({ initialThread, currentUserId, partnerId, pa
                             try {
                                 await sendMessage(formData);
                             } catch (e: any) {
+                                if (e?.message === "NEXT_REDIRECT") throw e;
                                 toast.error(e.message || "Failed to send");
                             }
                         });

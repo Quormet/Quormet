@@ -18,6 +18,7 @@ export default function NewMessageForm({ recipients }: { recipients: { id: numbe
             await sendMessage(formData);
             toast.success("Message sent");
         } catch (e: any) {
+            if (e?.message === "NEXT_REDIRECT") throw e;
             toast.error(e.message || "Failed to send message");
             setIsLoading(false);
         }
