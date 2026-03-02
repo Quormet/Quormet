@@ -66,7 +66,14 @@ export default async function MessagesPage() {
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between gap-2">
                                             <p className="font-semibold text-sm truncate">{c.name || c.email}</p>
-                                            <span className="text-[11px] text-slate-400 shrink-0">{timeLabel(c.lastAt)}</span>
+                                            <div className="flex items-center gap-2">
+                                                {c.unreadCount > 0 && (
+                                                    <span className="flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-red-600 text-white text-[10px] font-bold">
+                                                        {c.unreadCount > 9 ? '9+' : c.unreadCount}
+                                                    </span>
+                                                )}
+                                                <span className="text-[11px] text-slate-400 shrink-0">{timeLabel(c.lastAt)}</span>
+                                            </div>
                                         </div>
                                         <p className="text-xs text-slate-500 truncate mt-0.5">{c.lastBody}</p>
                                     </div>

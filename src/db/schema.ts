@@ -69,6 +69,7 @@ export const messages = pgTable('messages', {
     senderId: integer('sender_id').notNull().references(() => users.id),
     recipientId: integer('recipient_id').notNull().references(() => users.id),
     body: text('body').notNull(),
+    isRead: boolean('is_read').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

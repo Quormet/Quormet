@@ -154,27 +154,10 @@ export async function joinCommunityById(communityId: number) {
     const [community] = await db.select().from(communities).where(eq(communities.id, communityId)).limit(1);
     if (!community) throw new Error("Community not found");
 
-    if (community.plan === "free") {
-        const [memberCountResult] = await db
-            .select({ count: sql<number>`count(*)` })
-            .from(communityMembers)
-            .where(eq(communityMembers.communityId, community.id));
-        const limit = community.planMemberLimit || 20;
-        // If the user is already in the community, they are just switching active context so we don't throw error
-        const [existingMember] = await db.select().from(communityMembers)
-            .where(and(eq(communityMembers.userId, user.id as unknown as number), eq(communityMembers.communityId, community.id)))
-            .limit(1)
-
-        // I can actually let the upsert run if they are already a member! wait!
-        // The join code flow also acts as a context switcher for existing members.
-        if (!existingMember && Number(memberCountResult.count) >= limit) {
-            throw new Error(`This community has reached its free tier limit of ${limit} members. Please ask an admin to upgrade.`);
-        }
-    }
-
     const primaryEmail = user.email || "no-email@example.com";
     const fullName = (user.user_metadata?.full_name || user.user_metadata?.name || "Community Member") as string;
 
+    // upsert the user first, so we have a numeric dbUser.id to use in subsequent checks
     const [dbUser] = await db.insert(users).values({
         supabaseId: user.id,
         name: fullName,
@@ -189,6 +172,23 @@ export async function joinCommunityById(communityId: number) {
             communityId: community.id,
         }
     }).returning();
+
+    // determine if user is already a member of this community
+    const [existingMember] = await db.select().from(communityMembers)
+        .where(and(eq(communityMembers.userId, dbUser.id), eq(communityMembers.communityId, community.id)))
+        .limit(1);
+
+    if (community.plan === "free") {
+        const [memberCountResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(communityMembers)
+            .where(eq(communityMembers.communityId, community.id));
+        const limit = community.planMemberLimit || 20;
+        // only enforce limit when they're not already part of the community
+        if (!existingMember && Number(memberCountResult.count) >= limit) {
+            throw new Error(`This community has reached its free tier limit of ${limit} members. Please ask an admin to upgrade.`);
+        }
+    }
 
     // Add to community_members if not already a member
     const [member] = await db.insert(communityMembers).values({

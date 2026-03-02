@@ -90,6 +90,7 @@ export async function getConversations() {
         senderId: messages.senderId,
         recipientId: messages.recipientId,
         body: messages.body,
+        isRead: messages.isRead,
         createdAt: messages.createdAt,
     })
         .from(messages)
@@ -99,12 +100,18 @@ export async function getConversations() {
         ))
         .orderBy(desc(messages.createdAt));
 
-    // Build map: partnerId → { lastMessage, lastAt }
+    // Build maps: partnerId → { lastMessage, lastAt } and unread count
     const convMap = new Map<number, { lastBody: string; lastAt: Date }>();
+    const unreadMap = new Map<number, number>();
     for (const m of allMessages) {
         const partnerId = m.senderId === user.id ? m.recipientId : m.senderId;
         if (!convMap.has(partnerId)) {
             convMap.set(partnerId, { lastBody: m.body, lastAt: new Date(m.createdAt) });
+        }
+        // count unread messages where the current user is the recipient
+        if (m.recipientId === user.id && !m.isRead) {
+            const prev = unreadMap.get(m.senderId) || 0;
+            unreadMap.set(m.senderId, prev + 1);
         }
     }
 
@@ -120,6 +127,7 @@ export async function getConversations() {
         ...p,
         lastBody: convMap.get(p.id)!.lastBody,
         lastAt: convMap.get(p.id)!.lastAt,
+        unreadCount: unreadMap.get(p.id) || 0,
     })).sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
 
     return { conversations, currentUserId: user.id };
@@ -130,6 +138,16 @@ export async function getConversations() {
  */
 export async function getThread(partnerId: number) {
     const user = await getAuthUser();
+
+    // mark any unread messages from partner as read
+    await db.update(messages)
+        .set({ isRead: true })
+        .where(and(
+            eq(messages.communityId, user.communityId!),
+            eq(messages.recipientId, user.id),
+            eq(messages.senderId, partnerId),
+            eq(messages.isRead, false)
+        ));
 
     const thread = await db.select({
         id: messages.id,

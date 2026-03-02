@@ -82,18 +82,7 @@ export function SidebarNav({
     }
 
     const renderCommunitySwitcher = () => {
-        if (communities.length <= 1) {
-            return (
-                <div className="mb-6 px-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Community</p>
-                    <p className="font-medium text-slate-900 truncate">{communityName || "Community"}</p>
-                    {role === "admin" && (
-                        <p className="text-xs text-slate-500 mt-1">Join Code: <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-blue-700">{joinCode}</span></p>
-                    )}
-                </div>
-            );
-        }
-
+        // always show the dropdown even if there's only one (or zero) communities
         return (
             <div className="mb-6 px-2">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Community</p>
