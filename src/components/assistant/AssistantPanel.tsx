@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Bot, MessageSquare, X, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import AssistantChat from './AssistantChat'
@@ -8,6 +9,12 @@ import { cn } from '@/lib/utils'
 
 export default function AssistantPanel({ userRole, canUseAI }: { userRole: 'admin' | 'member'; canUseAI: boolean }) {
     const [isOpen, setIsOpen] = useState(false)
+    const pathname = usePathname();
+
+    // hide the assistant when user is in the messages section (list or thread)
+    if (pathname?.startsWith('/messages')) {
+        return null;
+    }
 
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
