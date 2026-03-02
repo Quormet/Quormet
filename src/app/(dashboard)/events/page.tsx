@@ -73,54 +73,63 @@ export default async function EventsPage() {
                         const isPast = new Date(event.startsAt) < new Date();
 
                         return (
-                            <Card key={event.id} className={`flex flex-col relative overflow-hidden ${isPast ? 'opacity-70 grayscale' : ''}`}>
-                                <div className="h-2 w-full bg-blue-600 absolute top-0 left-0" />
+                            <Card key={event.id} className={`flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 group ${isPast ? 'opacity-70 grayscale shadow-none' : 'shadow-sm border-slate-200'}`}>
+                                <div className={`h-1.5 w-full absolute top-0 left-0 ${isPast ? 'bg-slate-400' : 'bg-gradient-to-r from-blue-500 to-indigo-600'}`} />
                                 {dbUser.role === "admin" && (
                                     <EventActions id={event.id} />
                                 )}
-                                <CardHeader>
-                                    <CardTitle className="text-xl leading-snug pr-8">{event.name}</CardTitle>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-xl font-bold leading-tight tracking-tight pr-8 text-slate-900 group-hover:text-blue-700 transition-colors">{event.name}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-4 flex-1">
-                                    <div className="space-y-2 text-sm text-slate-600">
-                                        <div className="flex items-start gap-2">
-                                            <Clock className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
+                                <CardContent className="space-y-4 flex-1 pb-6">
+                                    <div className="space-y-2.5 text-sm text-slate-600">
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-0.5 p-1 bg-blue-50 text-blue-600 rounded-md shrink-0">
+                                                <Clock className="h-3.5 w-3.5" />
+                                            </div>
                                             <div>
-                                                <p className="font-medium text-slate-900">{new Date(event.startsAt).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                                                <p>{new Date(event.startsAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</p>
+                                                <p className="font-semibold text-slate-900">{new Date(event.startsAt).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                                <p className="text-slate-500">{new Date(event.startsAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</p>
                                             </div>
                                         </div>
                                         {event.location && (
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-                                                <span>{event.location}</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-1 bg-indigo-50 text-indigo-600 rounded-md shrink-0">
+                                                    <MapPin className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="font-medium truncate">{event.location}</span>
                                             </div>
                                         )}
                                     </div>
 
+                                    <div className="h-px bg-slate-100" />
+
                                     {event.description && (
-                                        <div className="text-sm p-3 bg-slate-50 rounded text-slate-700 whitespace-pre-wrap">
+                                        <div className="text-sm p-4 bg-slate-50/50 rounded-xl text-slate-600 italic border border-slate-100/50 leading-relaxed">
                                             {event.description}
                                         </div>
                                     )}
 
                                     {!isPast && (
                                         <div className="pt-2">
-                                            <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Your RSVP</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">RSVP Status</p>
                                             <RsvpButtons eventId={event.id} userResponse={userRsvp} />
                                         </div>
                                     )}
                                 </CardContent>
 
                                 {dbUser.role === "admin" && (
-                                    <div className="p-4 bg-slate-50 border-t mt-auto text-sm">
-                                        <p className="font-semibold text-slate-700 mb-1">RSVPs ({attendees.length} Yes)</p>
+                                    <div className="px-6 py-4 bg-slate-50 border-t mt-auto text-xs">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Users className="h-3.5 w-3.5 text-slate-400" />
+                                            <p className="font-bold text-slate-700 uppercase tracking-tighter">Attendees ({attendees.length})</p>
+                                        </div>
                                         {attendees.length > 0 ? (
-                                            <p className="text-slate-500 max-h-16 overflow-y-auto">
+                                            <p className="text-slate-500 max-h-16 overflow-y-auto leading-normal">
                                                 {attendees.map(a => a.userName).join(", ")}
                                             </p>
                                         ) : (
-                                            <p className="text-slate-400 italic">No attendees yet</p>
+                                            <p className="text-slate-400 italic">No "Yes" responses yet</p>
                                         )}
                                     </div>
                                 )}

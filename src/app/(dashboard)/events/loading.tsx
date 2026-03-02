@@ -10,19 +10,27 @@ export default function EventsLoading() {
                 </div>
                 <Skeleton className="h-10 w-28 rounded-lg" />
             </div>
-            <div className="space-y-4">
-                {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-2xl p-6 border shadow-sm flex gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${(i + 2) * 100}ms` }}>
-                        <div className="w-16 h-16 rounded-xl bg-slate-100 shrink-0 flex flex-col items-center justify-center space-y-1">
-                            <Skeleton className="h-3 w-8" />
-                            <Skeleton className="h-6 w-6" />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-2xl p-6 border shadow-sm flex flex-col space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${(i + 2) * 100}ms` }}>
+                        <div className="space-y-3">
+                            <Skeleton className="h-6 w-3/4" />
+                            <div className="space-y-2">
+                                <div className="flex gap-2">
+                                    <Skeleton className="h-4 w-4 rounded" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </div>
+                                <div className="flex gap-2">
+                                    <Skeleton className="h-4 w-4 rounded" />
+                                    <Skeleton className="h-4 w-1/3" />
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex-1 space-y-2">
-                            <Skeleton className="h-5 w-2/3" />
-                            <Skeleton className="h-4 w-1/2" />
-                            <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-20 w-full rounded-xl" />
+                        <div className="flex gap-2 pt-2">
+                            <Skeleton className="h-9 flex-1 rounded-lg" />
+                            <Skeleton className="h-9 flex-1 rounded-lg" />
                         </div>
-                        <Skeleton className="h-9 w-20 rounded-lg self-center" />
                     </div>
                 ))}
             </div>
