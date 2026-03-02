@@ -20,15 +20,15 @@ export default async function DashboardPage() {
     return (
         <div className="flex w-full h-full overflow-hidden">
             <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto w-full flex-1 overflow-y-auto">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Good morning, {user.name.split(' ')[0]} <span className="inline-block animate-wave origin-[70%_70%]">👋</span></h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Good morning, {user.name.split(' ')[0]} <span className="animate-wave">👋</span></h1>
                         <p className="text-slate-500 mt-1 text-lg">{communityName}</p>
                     </div>
 
                     {isAdmin && (
                         <div className="flex gap-2">
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700" asChild>
+                            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all" asChild>
                                 <Link href="/settings"><PlusCircle className="mr-2 h-4 w-4" /> Manage Community</Link>
                             </Button>
                         </div>
@@ -64,10 +64,13 @@ export default async function DashboardPage() {
                 )}
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <Card className="hover:shadow-md transition-shadow">
+                    <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden animate-fade-in-up">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-slate-500">{terms.members}</CardTitle>
-                            <Users className="h-4 w-4 text-blue-500" />
+                            <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <Users className="h-4 w-4 text-blue-600" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-slate-800">{stats.memberCount}</div>
@@ -75,10 +78,13 @@ export default async function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-md transition-shadow">
+                    <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden animate-fade-in-up-d1">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-400 to-indigo-600" />
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-slate-500">Upcoming Events</CardTitle>
-                            <Calendar className="h-4 w-4 text-indigo-500" />
+                            <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                <Calendar className="h-4 w-4 text-indigo-600" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-slate-800">{stats.eventCount}</div>
@@ -86,10 +92,13 @@ export default async function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-md transition-shadow">
+                    <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden animate-fade-in-up-d2">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600" />
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-slate-500">Active Polls</CardTitle>
-                            <Vote className="h-4 w-4 text-emerald-500" />
+                            <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                <Vote className="h-4 w-4 text-emerald-600" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-slate-800">{stats.activePollsCount}</div>
@@ -97,10 +106,13 @@ export default async function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-md transition-shadow">
+                    <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden animate-fade-in-up-d3">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600" />
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-slate-500">Dues Collection</CardTitle>
-                            <Coins className="h-4 w-4 text-amber-500" />
+                            <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                                <Coins className="h-4 w-4 text-amber-600" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold text-slate-800 flex items-baseline gap-1">
@@ -109,7 +121,7 @@ export default async function DashboardPage() {
                             <div className="mt-2 w-full">
                                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-amber-500 rounded-full transition-all duration-500 ease-out"
+                                        className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-1000 ease-out"
                                         style={{ width: `${(stats.paidCount / (stats.totalCount || 1)) * 100}%` }}
                                     />
                                 </div>

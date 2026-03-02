@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Github, Chrome, Loader2, Building, Eye, EyeOff } from 'lucide-react'
+import { Chrome, Loader2, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -54,25 +54,34 @@ export default function SignupPage() {
         }
     }
 
-
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
-            <Link href="/" className="mb-8 flex items-center gap-2">
-                <Building className="h-8 w-8 text-blue-600" />
+        <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden">
+            {/* Animated gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-blue-50 to-violet-100 animate-gradient" />
+            {/* Decorative floating orbs */}
+            <div className="absolute top-16 right-[10%] w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl animate-float" />
+            <div className="absolute bottom-16 left-[12%] w-80 h-80 bg-blue-400/15 rounded-full blur-3xl animate-float-delayed" />
+            <div className="absolute bottom-1/3 right-[25%] w-48 h-48 bg-violet-300/20 rounded-full blur-3xl animate-pulse-soft" />
+
+            <Link href="/" className="mb-8 flex items-center gap-2 relative z-10 group">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-shadow">
+                    Q
+                </div>
                 <span className="font-bold text-2xl tracking-tight">Quorify</span>
             </Link>
-            <Card className="w-full max-w-md">
+
+            <Card className="w-full max-w-md relative z-10 shadow-xl border-0 glass-strong rounded-2xl animate-fade-in-up">
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
                     <CardDescription>
-                        Enter your email and password to create your account
+                        Enter your details to create your account
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4">
                     <form action={handleSubmit} className="grid gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" name="name" type="text" placeholder="John Doe" required disabled={isLoading} />
+                            <Input id="name" name="name" type="text" placeholder="John Doe" required disabled={isLoading} className="bg-white/50" />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>
@@ -83,7 +92,7 @@ export default function SignupPage() {
                                 placeholder="m@example.com"
                                 required
                                 disabled={isLoading}
-                                className={emailError ? 'border-red-500' : ''}
+                                className={`bg-white/50 ${emailError ? 'border-red-500' : ''}`}
                             />
                             {emailError && <p className="text-sm text-red-500">{emailError}</p>}
                         </div>
@@ -96,7 +105,7 @@ export default function SignupPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     required
                                     disabled={isLoading}
-                                    className={passwordError ? 'border-red-500 pr-10' : 'pr-10'}
+                                    className={`bg-white/50 ${passwordError ? 'border-red-500 pr-10' : 'pr-10'}`}
                                 />
                                 <button
                                     type="button"
@@ -108,7 +117,7 @@ export default function SignupPage() {
                             </div>
                             {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
                         </div>
-                        <Button className="w-full" type="submit" disabled={isLoading}>
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all" type="submit" disabled={isLoading}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Sign Up
                         </Button>
@@ -116,21 +125,17 @@ export default function SignupPage() {
 
                     <div className="relative my-2">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
+                            <span className="w-full border-t border-slate-200" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-500">Or</span>
+                            <span className="bg-white/90 px-2 text-slate-500">Or</span>
                         </div>
                     </div>
 
                     <div className="grid gap-2">
-                        <Button variant="outline" onClick={() => signInWithOAuth('google')} disabled={isLoading} className="w-full justify-start">
+                        <Button variant="outline" onClick={() => signInWithOAuth('google')} disabled={isLoading} className="w-full justify-start bg-white/50 hover:bg-white transition-colors">
                             <Chrome className="mr-2 h-4 w-4" />
                             Continue with Google
-                        </Button>
-                        <Button variant="outline" onClick={() => signInWithOAuth('github')} disabled={isLoading} className="w-full justify-start">
-                            <Github className="mr-2 h-4 w-4" />
-                            Continue with Github
                         </Button>
                     </div>
                 </CardContent>

@@ -137,15 +137,15 @@ export function SidebarNav({
                         key={item.name}
                         href={item.href}
                         onClick={() => setOpen(false)}
-                        className={`flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors ${isActive
-                            ? "bg-slate-100 text-blue-700"
-                            : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                        className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${isActive
+                            ? "bg-blue-50 text-blue-700 border-l-[3px] border-blue-600 shadow-sm"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5 border-l-[3px] border-transparent"
                             }`}
                     >
-                        <item.icon className="h-4 w-4 shrink-0" />
+                        <item.icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-blue-600' : ''}`} />
                         <span className="flex-1">{item.name}</span>
                         {dotCount > 0 && (
-                            <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-bold px-1">
+                            <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold px-1 shadow-sm">
                                 {dotCount > 9 ? '9+' : dotCount}
                             </span>
                         )}
@@ -157,7 +157,7 @@ export function SidebarNav({
 
     const renderUserMenu = () => (
         <div className="flex items-center gap-3 mb-2 px-2">
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">
                 {userName ? userName[0] : "U"}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
@@ -171,8 +171,10 @@ export function SidebarNav({
         <>
             {/* Mobile Header & Nav */}
             <div className="md:hidden flex h-14 items-center justify-between px-4 border-b bg-white sticky top-0 z-30">
-                <Link href="/dashboard" className="flex items-center gap-2">
-                    <Building className="h-5 w-5 text-blue-600" />
+                <Link href="/dashboard" className="flex items-center gap-2 group">
+                    <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-blue-500/20">
+                        Q
+                    </div>
                     <span className="font-bold tracking-tight">Quorify</span>
                 </Link>
 
@@ -206,8 +208,10 @@ export function SidebarNav({
             {/* Desktop Sidebar */}
             <aside className="w-64 border-r bg-white flex-col hidden md:flex shrink-0">
                 <div className="h-16 flex items-center px-6 border-b shrink-0">
-                    <Link href="/dashboard" className="flex items-center gap-2">
-                        <Building className="h-6 w-6 text-blue-600" />
+                    <Link href="/dashboard" className="flex items-center gap-2 group">
+                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+                            Q
+                        </div>
                         <span className="font-bold text-lg tracking-tight">Quorify</span>
                     </Link>
                 </div>

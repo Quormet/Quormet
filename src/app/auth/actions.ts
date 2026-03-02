@@ -11,6 +11,7 @@ import { db } from '@/db'
 import { communities, users } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { getBaseUrl } from '@/lib/utils'
 
 export async function signUp(formData: FormData) {
     const supabase = await createClient()
@@ -26,7 +27,7 @@ export async function signUp(formData: FormData) {
             data: {
                 full_name: name,
             },
-            emailRedirectTo: `${(await headers()).get('origin')}/auth/callback`,
+            emailRedirectTo: `${getBaseUrl()}/auth/callback`,
         },
     })
 
@@ -61,13 +62,13 @@ export async function signIn(formData: FormData) {
     return redirect('/dashboard')
 }
 
-export async function signInWithOAuth(provider: 'google' | 'github') {
+export async function signInWithOAuth(provider: 'google') {
     const supabase = await createClient()
 
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-            redirectTo: `${(await headers()).get('origin')}/auth/callback`,
+            redirectTo: `${getBaseUrl()}/auth/callback`,
         },
     })
 
