@@ -24,7 +24,7 @@ export default function AssistantPanel({ userRole, canUseAI }: { userRole: 'admi
                                 <Bot className="w-4 h-4 text-primary-foreground" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm">Quormet Assistant</p>
+                                <p className="font-semibold text-sm">Quorify Assistant</p>
                                 <p className="text-[10px] text-muted-foreground leading-none">Ask anything or give a command</p>
                             </div>
                         </div>

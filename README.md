@@ -1,10 +1,10 @@
-# Quormet
+# Quorify
 
 **The platform for running any community.**
 
-Quormet is the community layer the internet is missing — an all-in-one platform for governance, communication, and operations. Built for HOAs, apartment buildings, sports clubs, tenant unions, churches, and any group of people who share a space or a responsibility.
+Quorify is the community layer the internet is missing — an all-in-one platform for governance, communication, and operations. Built for HOAs, apartment buildings, sports clubs, tenant unions, churches, and any group of people who share a space or a responsibility.
 
-🌐 **Live app:** [quormet.vercel.app](https://quormet.vercel.app)
+🌐 **Live app:** [quorify.vercel.app](https://quorify.vercel.app)
 
 ---
 
@@ -16,7 +16,7 @@ The tools exist for everything else — project management, CRM, finance. Nobody
 
 ---
 
-## What Quormet Does
+## What Quorify Does
 
 | Feature | What it replaces |
 |---------|-----------------|
@@ -35,7 +35,7 @@ The tools exist for everything else — project management, CRM, finance. Nobody
 
 ## The AI Assistant
 
-The Quormet Assistant is powered by Google Gemini via Vertex AI. It understands your community's specific rules, schedules, and history.
+The Quorify Assistant is powered by Google Gemini via Vertex AI. It understands your community's specific rules, schedules, and history.
 
 **Members can ask:**
 - "What are the quiet hours?"
@@ -121,8 +121,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ```bash
 # Clone the repo
-git clone https://github.com/Quormet/Quormet.git
-cd Quormet
+git clone https://github.com/Quorify/Quorify.git
+cd Quorify
 
 # Install dependencies
 npm install

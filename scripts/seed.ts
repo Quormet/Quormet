@@ -22,11 +22,17 @@ async function main() {
     await db.delete(schema.documents);
     await db.delete(schema.events);
     await db.delete(schema.polls);
+    await db.delete(schema.helpOffers);
+    await db.delete(schema.helpRequests);
+    await db.delete(schema.notifications);
+    await db.delete(schema.vendorRatings);
     await db.delete(schema.issueUpdates);
     await db.delete(schema.issues);
+    await db.delete(schema.vendors);
+    await db.delete(schema.messages);
     await db.delete(schema.communityMembers);
-    await db.delete(schema.communities);
     await db.delete(schema.users);
+    await db.delete(schema.communities);
 
     console.log('✅ Cleared old data');
 
@@ -94,8 +100,8 @@ async function main() {
         {
             communityId: community.id,
             authorId: sarah.id,
-            title: 'Welcome to Quormet — Your community now has a home.',
-            body: 'We\'re excited to announce that Maplewood HOA is now on Quormet. Use this platform to stay informed about announcements, vote on community decisions, and report issues. Your board is committed to making our community better together.',
+            title: 'Welcome to Quorify — Your community now has a home.',
+            body: 'We\'re excited to announce that Maplewood HOA is now on Quorify. Use this platform to stay informed about announcements, vote on community decisions, and report issues. Your board is committed to making our community better together.',
             createdAt: new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000),
         },
     ]);
@@ -219,6 +225,82 @@ async function main() {
         },
     ]).returning();
     console.log('✅ Issues created');
+
+    // Create Vendors
+    const [landscaper, electrician] = await db.insert(schema.vendors).values([
+        {
+            communityId: community.id,
+            name: 'Green Thumb Landscaping',
+            categories: ['maintenance', 'landscaping'],
+            phone: '555-0101',
+            email: 'contact@greenthumb.com',
+        },
+        {
+            communityId: community.id,
+            name: 'Bright Spark Electric',
+            categories: ['electrical', 'safety'],
+            phone: '555-0102',
+            email: 'service@brightspark.com',
+        },
+    ]).returning();
+    console.log('✅ Vendors created');
+
+    // Create Help Board Requests
+    const [dogWalking, ladderHelp] = await db.insert(schema.helpRequests).values([
+        {
+            communityId: community.id,
+            requestedBy: mike.id,
+            title: 'Dog walking help',
+            description: 'Looking for someone to walk my dog this Tuesday while I\'m at work.',
+            tags: ['pets', 'outdoor'],
+            neededBy: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+        },
+        {
+            communityId: community.id,
+            requestedBy: anna.id,
+            title: 'Need a tall ladder',
+            description: 'Can I borrow a tall ladder to clean my gutters this weekend?',
+            tags: ['tools', 'maintenance'],
+            neededBy: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+        },
+    ]).returning();
+    console.log('✅ Help requests created');
+
+    // Create Help Board Offers
+    await db.insert(schema.helpOffers).values([
+        {
+            requestId: dogWalking.id,
+            offeredBy: tom.id,
+            message: 'I can help with that! I already walk mine around noon.',
+        },
+    ]);
+    console.log('✅ Help offers created');
+
+    // Create Messages (unread test)
+    await db.insert(schema.messages).values([
+        {
+            communityId: community.id,
+            senderId: mike.id,
+            recipientId: sarah.id,
+            body: 'Hi Sarah, can we talk about the Building A gate?',
+            isRead: false,
+        },
+        {
+            communityId: community.id,
+            senderId: anna.id,
+            recipientId: sarah.id,
+            body: 'Hey, I reported the parking light issue.',
+            isRead: false,
+        },
+        {
+            communityId: community.id,
+            senderId: sarah.id,
+            recipientId: mike.id,
+            body: 'Sure Mike, I saw your report. Let\'s discuss.',
+            isRead: true,
+        },
+    ]);
+    console.log('✅ Messages created');
 
     // Create payments (Mike and Anna paid, Tom and James didn't)
     const janPaid = new Date('2026-01-15T10:00:00');

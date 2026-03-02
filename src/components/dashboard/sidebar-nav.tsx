@@ -173,7 +173,7 @@ export function SidebarNav({
             <div className="md:hidden flex h-14 items-center justify-between px-4 border-b bg-white sticky top-0 z-30">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <Building className="h-5 w-5 text-blue-600" />
-                    <span className="font-bold tracking-tight">Quormet</span>
+                    <span className="font-bold tracking-tight">Quorify</span>
                 </Link>
 
                 <Sheet open={open} onOpenChange={setOpen}>
@@ -208,7 +208,7 @@ export function SidebarNav({
                 <div className="h-16 flex items-center px-6 border-b shrink-0">
                     <Link href="/dashboard" className="flex items-center gap-2">
                         <Building className="h-6 w-6 text-blue-600" />
-                        <span className="font-bold text-lg tracking-tight">Quormet</span>
+                        <span className="font-bold text-lg tracking-tight">Quorify</span>
                     </Link>
                 </div>
 

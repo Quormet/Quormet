@@ -21,7 +21,7 @@ async function getAuthUser() {
     if (!dbUser) throw new Error("No user found");
 
     const cookieStore = await cookies();
-    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
+    const activeCookieVal = cookieStore.get("quorify_active_community")?.value;
     const communityId = activeCookieVal ? parseInt(activeCookieVal) : dbUser.communityId;
     if (!communityId) throw new Error("No community found");
 
@@ -41,7 +41,7 @@ export async function createAnnouncement(formData: FormData) {
 
     // Fallback to active community cookie if needed
     const cookieStore = await cookies();
-    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
+    const activeCookieVal = cookieStore.get("quorify_active_community")?.value;
     const communityId = activeCookieVal ? parseInt(activeCookieVal) : user.communityId;
 
     if (!communityId) throw new Error("Community context is required");

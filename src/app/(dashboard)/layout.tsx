@@ -31,7 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
 
     const cookieStore = await cookies();
-    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
+    const activeCookieVal = cookieStore.get("quorify_active_community")?.value;
     const activeCommunityId = activeCookieVal
         ? parseInt(activeCookieVal)
         : (memberships[0]?.communityId ?? dbUser?.communityId);
@@ -77,12 +77,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
         if (unvotedCount > 0) notifs['/polls'] = unvotedCount;
 
         // Open issues (submitted / in_progress)
+        // For non-admins, only count their own reported issues
+        const issueFilters = [
+            eq(issues.communityId, resolvedCommunityId),
+            inArray(issues.status, ['submitted', 'board_review', 'in_progress'])
+        ];
+        if (resolvedRole !== 'admin') {
+            issueFilters.push(eq(issues.reportedBy, dbUser.id));
+        }
+
         const openIssuesCount = await db.select({ id: issues.id })
             .from(issues)
-            .where(and(
-                eq(issues.communityId, resolvedCommunityId),
-                inArray(issues.status, ['submitted', 'board_review', 'in_progress'])
-            ));
+            .where(and(...issueFilters));
         if (openIssuesCount.length > 0) notifs['/issues'] = openIssuesCount.length;
     }
 

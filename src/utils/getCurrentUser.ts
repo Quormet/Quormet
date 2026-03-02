@@ -16,7 +16,7 @@ export async function getCurrentUser() {
 
         // Determine the active community from cookie or first membership
         const cookieStore = await cookies()
-        const activeCommunityIdCookie = cookieStore.get('quormet_active_community')?.value
+        const activeCommunityIdCookie = cookieStore.get('quorify_active_community')?.value
 
         // Fetch all memberships for this user
         const memberships = await db

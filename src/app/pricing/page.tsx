@@ -11,7 +11,7 @@ export default function PricingPage() {
                     <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xl leading-none">
                         Q
                     </div>
-                    <span className="font-bold text-xl tracking-tight text-slate-900">Quormet</span>
+                    <span className="font-bold text-xl tracking-tight text-slate-900">Quorify</span>
                 </div>
                 <div className="flex gap-4">
                     <Button variant="ghost" asChild>
@@ -31,7 +31,7 @@ export default function PricingPage() {
                 <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
                     Start for free and upgrade as your community grows.
                     <br />
-                    <span className="font-medium text-blue-600 block mt-2 px-4 py-2 bg-blue-50 rounded-lg inline-block text-sm">Note: All premium tiers are illustrative for future implementation. Quormet is currently in free beta.</span>
+                    <span className="font-medium text-blue-600 block mt-2 px-4 py-2 bg-blue-50 rounded-lg inline-block text-sm">Note: All premium tiers are illustrative for future implementation. Quorify is currently in free beta.</span>
                 </p>
 
                 <div className="mt-10 flex items-center justify-center gap-3">
@@ -272,7 +272,7 @@ export default function PricingPage() {
             </div>
 
             <div className="text-center mt-20 text-slate-500">
-                <p>© 2026 Quormet. All rights reserved.</p>
+                <p>© 2026 Quorify. All rights reserved.</p>
             </div>
         </div>
     );

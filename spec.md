@@ -1,4 +1,4 @@
-# Quormet — Pricing & Feature Gating Spec
+# Quorify — Pricing & Feature Gating Spec
 
 > This document defines every pricing tier, what each tier includes,
 > how features are gated, and how the pricing page should be built.
@@ -28,7 +28,7 @@
 
 ## Feature Gating — Full Matrix
 
-Every feature in Quormet falls into one of four access levels:
+Every feature in Quorify falls into one of four access levels:
 
 - **Free** — available to all communities and members at no cost
 - **Community+** — requires Community plan ($29/mo) or higher

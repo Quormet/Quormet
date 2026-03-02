@@ -24,7 +24,7 @@ export default async function IntelligencePanel({ isLocked }: { isLocked?: boole
         <div className={`space-y-3 ${isLocked ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold text-sm">Quormet Intelligence</h3>
+                <h3 className="font-semibold text-sm">Quorify Intelligence</h3>
                 {isLocked ? (
                     <span className="text-xs text-amber-600 font-medium ml-auto flex items-center gap-1"><Lock className="w-3 h-3" /> Upgrade to Pro</span>
                 ) : (

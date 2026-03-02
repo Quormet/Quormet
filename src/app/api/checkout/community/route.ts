@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         const { interval } = await req.json(); // "month" or "year"
 
         const amount = interval === "year" ? 20000 : 2000; // $200/year or $20/month
-        const planName = interval === "year" ? "Quormet Community Plan (Annual)" : "Quormet Community Plan (Monthly)";
+        const planName = interval === "year" ? "Quorify Community Plan (Annual)" : "Quorify Community Plan (Monthly)";
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],

@@ -19,7 +19,7 @@ async function getAuthUser() {
 
     // Determine active community from cookie
     const cookieStore = await cookies();
-    const activeCookieVal = cookieStore.get("quormet_active_community")?.value;
+    const activeCookieVal = cookieStore.get("quorify_active_community")?.value;
     const communityId = activeCookieVal ? parseInt(activeCookieVal) : dbUser.communityId;
     if (!communityId) throw new Error("No community found");
 

@@ -36,7 +36,7 @@ You CANNOT create content or take admin actions on behalf of members.
 `;
 
     return `
-You are the AI assistant for ${community.name}, a community management platform called Quormet.
+You are the AI assistant for ${community.name}, a community management platform called Quorify.
 
 ## Who You're Talking To
 - Name: ${user.name}

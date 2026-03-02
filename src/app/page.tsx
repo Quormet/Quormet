@@ -1,5 +1,5 @@
 /**
- * The landing page for Quormet, featuring sections for features, pricing, 
+ * The landing page for Quorify, featuring sections for features, pricing, 
  * and calls to action for creating or joining a community.
  */
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default async function LandingPage() {
       <header className="px-6 lg:px-14 h-16 flex items-center border-b bg-white sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-2">
           <Building className="h-6 w-6 text-blue-600" />
-          <span className="font-bold text-xl tracking-tight">Quormet</span>
+          <span className="font-bold text-xl tracking-tight">Quorify</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4 hidden sm:block text-slate-600 hover:text-slate-900 transition-colors">
@@ -174,14 +174,14 @@ export default async function LandingPage() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <Building className="h-6 w-6 text-blue-500" />
-              <span className="font-bold text-xl tracking-tight text-white">Quormet</span>
+              <span className="font-bold text-xl tracking-tight text-white">Quorify</span>
             </div>
             <p className="text-xs text-slate-500 max-w-sm mt-2">
               Proudly supporting the United Nations Sustainable Development Goals (SDG 11: Sustainable Cities and Communities & SDG 16: Peace, Justice and Strong Institutions).
             </p>
           </div>
           <p className="text-sm">
-            © {new Date().getFullYear()} Quormet Inc. All rights reserved.
+            © {new Date().getFullYear()} Quorify Inc. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link href="#" className="text-sm hover:underline hover:text-white">Terms of Service</Link>

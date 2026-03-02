@@ -1,9 +1,10 @@
-# Quormet - AI Context & Developer Handbook
+# Quorify - AI Context & Developer Handbook
 
-This document provides a comprehensive overview of the Quormet application to assist AI agents in understanding the codebase, architecture, and feature set.
+This document provides a comprehensive overview of the Quorify application to assist AI agents in understanding the codebase, architecture, and feature set.
 
-## Project Overview
-Quormet is an all-in-one community management platform designed for neighborhood associations, HOAs, and community groups. It replaces fragmented email chains with a centralized hub for governance, communication, and operations.
+## Project Vision
+Quorify is an all-in-one community management platform designed for neighborhood associations, HOAs, and community groups. It replaces fragmented email chains with a centralized hub for governance, communication, and operations.
+
 
 ## Technical Stack
 - **Core**: Next.js 15+ (App Router)

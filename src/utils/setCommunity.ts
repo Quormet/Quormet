@@ -32,7 +32,7 @@ export async function setActiveCommunity(communityId: number) {
     if (!membership) throw new Error("You are not a member of this community");
 
     const cookieStore = await cookies();
-    cookieStore.set("quormet_active_community", String(communityId), {
+    cookieStore.set("quorify_active_community", String(communityId), {
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

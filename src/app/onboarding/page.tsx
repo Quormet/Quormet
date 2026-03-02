@@ -98,7 +98,7 @@ export default function OnboardingPage() {
             <div className="max-w-2xl w-full text-center mb-8">
                 <div className="flex items-center justify-center gap-2 mb-6">
                     <Building className="h-8 w-8 text-blue-600" />
-                    <span className="font-bold text-2xl tracking-tight">Quormet</span>
+                    <span className="font-bold text-2xl tracking-tight">Quorify</span>
                 </div>
 
                 {/* Progress Indicator */}

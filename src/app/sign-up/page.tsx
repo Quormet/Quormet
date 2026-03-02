@@ -59,7 +59,7 @@ export default function SignupPage() {
         <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
             <Link href="/" className="mb-8 flex items-center gap-2">
                 <Building className="h-8 w-8 text-blue-600" />
-                <span className="font-bold text-2xl tracking-tight">Quormet</span>
+                <span className="font-bold text-2xl tracking-tight">Quorify</span>
             </Link>
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1 text-center">
